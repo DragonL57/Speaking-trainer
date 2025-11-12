@@ -8,8 +8,13 @@ from typing import Optional, Tuple, Union
 import streamlit as st
 from pydub import AudioSegment
 import imageio_ffmpeg
-AudioSegment.converter = imageio_ffmpeg.get_ffmpeg_exe()
 import time
+
+# Cấu hình pydub để dùng ffmpeg từ imageio-ffmpeg
+ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
+AudioSegment.converter = ffmpeg_path
+AudioSegment.ffmpeg = ffmpeg_path
+AudioSegment.ffprobe = ffmpeg_path
 
 from config.constants import (
     SAMPLE_RATE, 
