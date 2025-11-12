@@ -338,39 +338,35 @@ def render_overall_results(results: ProcessedResults):
     Args:
         results: ProcessedResults object
     """
-    st.markdown("### 🎯 Đánh Giá Tổng Quan")
+    # Reference score with progress bar
+    score = results.reference_score
     
-    col1, col2 = st.columns(2)
+    # Determine color based on score
+    if score >= 80:
+        color = "#28a745"  # Green
+        status = "Tốt"
+    elif score >= 60:
+        color = "#ffc107"  # Yellow
+        status = "Khá"
+    else:
+        color = "#dc3545"  # Red
+        status = "Cần cải thiện"
     
-    with col1:
-        # Overall comment
-        st.info(f"**Nhận xét:** {results.overall_comment}")
-        
-        # Reference score
-        score_color = "🟢" if results.reference_score >= 80 else "🟡" if results.reference_score >= 60 else "🔴"
-        st.metric(
-            label="Điểm Tham Chiếu",
-            value=f"{score_color} {results.reference_score:.1f}%"
-        )
-    
-    with col2:
-        # Recognized text
-        st.markdown("**Những gì chúng tôi nghe được:**")
-        st.markdown(
-            f"""
-            <div style="
-                background-color: #f8f9fa;
-                border: 1px solid #dee2e6;
-                border-radius: 5px;
-                padding: 15px;
-                font-style: italic;
-                color: #212529;
-            ">
-                "{results.recognized_text}"
+    st.markdown("**Điểm Tổng**")
+    st.markdown(
+        f"""
+        <div style="margin-top: 5px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span style="font-weight: 600; font-size: 24px; color: {color};">{score:.1f}%</span>
+                <span style="color: {color}; font-weight: 500;">{status}</span>
             </div>
-            """,
-            unsafe_allow_html=True
-        )
+            <div style="background-color: #e9ecef; border-radius: 10px; height: 20px; overflow: hidden;">
+                <div style="background-color: {color}; height: 100%; width: {score}%; border-radius: 10px; transition: width 0.3s ease;"></div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 def render_loading_spinner():
     """Render a loading spinner during analysis."""

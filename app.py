@@ -58,8 +58,8 @@ def main():
     # Header - compact
     st.title(APP_TITLE)
     
-    # Main layout - 2 columns
-    col_input, col_result = st.columns([1, 1])
+    # Main layout - 2 columns (30/70)
+    col_input, col_result = st.columns([3, 7])
     
     with col_input:
         st.markdown("### Chọn Văn Bản & Thu Âm")
@@ -108,15 +108,19 @@ def main():
                 if audio_data:
                     st.session_state.audio_data = audio_data
                     st.session_state.audio_source = "recording"
-                    st.success("Đã ghi âm")
+                    st.success("✅ Đã ghi âm xong")
                 else:
                     st.error("Không thể xử lý âm thanh")
             except Exception as e:
                 st.error(f"Lỗi: {str(e)}")
                 logger.error(f"Audio processing error: {e}")
         
-        # Analyze button
-        analyze_button = st.button("Phân Tích", type="primary", use_container_width=True)
+        # Analyze button - only show if audio is recorded
+        if st.session_state.audio_data:
+            analyze_button = st.button("🎯 Phân Tích", type="primary", use_container_width=True)
+        else:
+            analyze_button = False
+            st.info("👆 Vui lòng ghi âm trước khi phân tích")
     
     with col_result:
         st.markdown("### Kết Quả")
@@ -154,26 +158,15 @@ def main():
         if st.session_state.analysis_results:
             results = st.session_state.analysis_results
             
-            # Create tabs for results
-            tab1, tab2, tab3 = st.tabs([
-                "Phát Âm", 
-                "Ngữ Điệu",
-                "Lưu Loát"
-            ])
+            # Create 2 tabs
+            tab1, tab2 = st.tabs(["📊 Tổng Quan", "🔍 Chi Tiết"])
             
             with tab1:
-                # Overall pronunciation scores
-                st.subheader("Điểm Tổng Quát")
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric("Âm học", f"{results.proficiency_scores.acoustic_score/10:.1f}/10")
-                with col2:
-                    st.metric("Tổng quát", f"{results.proficiency_scores.holistic_score*2:.1f}/10")
-                with col3:
-                    st.metric("Độ chính xác", f"{results.proficiency_scores.segmental_accuracy*2:.1f}/10")
+                # Overall results first
+                render_overall_results(results)
                 
                 # Colored word display - hiển thị từng từ với màu sắc
-                st.subheader("Phân Tích Chi Tiết")
+                st.subheader("Phân Tích Từng Từ")
                 if results.word_analyses:
                     import html
                     
@@ -275,63 +268,125 @@ def main():
                     words_html = []
                     
                     for word_analysis in results.word_analyses:
-                        word = html.escape(word_analysis.word)
+                        word = word_analysis.word
                         score = word_analysis.score
                         word_idx = word_analysis.word_idx
-                        
-                        # Determine color based on score
-                        if score >= 70:
-                            color = "#28a745"  # Green - Đúng
-                        elif score >= 40:
-                            color = "#ffc107"  # Yellow/Orange - Gần đúng
-                        else:
-                            color = "#dc3545"  # Red - Sai
+                        phoneme_details = word_analysis.phoneme_details
                         
                         # Build tooltip content with detailed error info
                         word_key = f"{word_analysis.word}_{word_idx}"
                         tooltip_parts = [f'<div class="tooltip-score">📊 Điểm: {score:.0f}/100</div>']
                         
+                        # Add phoneme-level details if available (only show errors)
+                        if phoneme_details and len(phoneme_details) > 0:
+                            # Only show phonemes with errors (score < 70)
+                            error_phonemes = [p for p in phoneme_details if p.score < 70]
+                            if error_phonemes:
+                                tooltip_parts.append(f'<div class="tooltip-error-title" style="margin-top: 10px;">Âm cần cải thiện:</div>')
+                                # Show max 3 worst phonemes
+                                for phoneme in sorted(error_phonemes, key=lambda p: p.score)[:3]:
+                                    if phoneme.score >= 40:
+                                        status_icon = "⚠️"
+                                        status_color = "#ffc107"
+                                    else:
+                                        status_icon = "❌"
+                                        status_color = "#dc3545"
+                                    
+                                    tooltip_parts.append(f'<div style="color: {status_color}; margin: 4px 0;">{status_icon} /{phoneme.ipa}/ - {phoneme.score:.0f}</div>')
+                        
+                        # Add word-level errors if available (only most important one)
                         if word_key in word_errors_map:
                             errors = word_errors_map[word_key]
-                            tooltip_parts.append(f'<div class="tooltip-error-title">⚠️ Phát hiện {len(errors)} lỗi:</div>')
-                            for idx, error in enumerate(errors, 1):
-                                error_type = html.escape(error.error_type)
+                            # Only show first most important error
+                            important_errors = [e for e in errors if e.error_type not in ['correction']][:1]
+                            if important_errors:
+                                error = important_errors[0]
                                 error_tag = html.escape(error.error_tag)
-                                tooltip_parts.append(f'<div class="tooltip-error-item">')
-                                tooltip_parts.append(f'<span class="tooltip-error-type">{idx}. {error_type}</span>')
-                                tooltip_parts.append(f'<div class="tooltip-error-detail">🔊 {error_tag}</div>')
-                                if error.definition:
-                                    # Remove Korean text if present, truncate if too long
-                                    definition = error.definition
-                                    if '음소' not in definition:  # Skip Korean definitions
-                                        definition = definition[:80] + '...' if len(definition) > 80 else definition
-                                        definition_escaped = html.escape(definition)
-                                        tooltip_parts.append(f'<div class="tooltip-error-detail">{definition_escaped}</div>')
-                                tooltip_parts.append('</div>')
-                        else:
-                            tooltip_parts.append('<div class="tooltip-no-error">✅ Không có lỗi</div>')
+                                # Translate error type to Vietnamese
+                                error_type_vn = {
+                                    'substitution': 'Thay thế',
+                                    'deletion': 'Thiếu âm',
+                                    'insertion': 'Thêm âm',
+                                    'correction': 'Chính xác'
+                                }.get(error.error_type, error.error_type)
+                                
+                                tooltip_parts.append(f'<div class="tooltip-error-title" style="margin-top: 10px;">Lỗi chính:</div>')
+                                tooltip_parts.append(f'<div style="color: #f39c12; margin: 4px 0;">{error_tag}</div>')
+                                tooltip_parts.append(f'<div style="color: #bbb; font-size: 11px;">({error_type_vn})</div>')
                         
                         tooltip_content = ''.join(tooltip_parts)
                         
-                        # Add word with color and beautiful tooltip
-                        word_html = f'''<span class="word-tooltip" style="color: {color}; border-bottom-color: {color};">
-                            {word}
+                        # Build word display with letter-level coloring based on phonemes
+                        word_html_parts = []
+                        ipa_html_parts = []
+                        ipa_text = word_analysis.ipa if word_analysis.ipa else ""
+                        
+                        # Color each letter based on corresponding phoneme score
+                        if phoneme_details and len(phoneme_details) > 0:
+                            # Simple heuristic: distribute letters across phonemes
+                            letters = list(word)
+                            num_letters = len(letters)
+                            num_phonemes = len(phoneme_details)
+                            
+                            # Calculate which letters correspond to which phonemes
+                            letters_per_phoneme = num_letters / num_phonemes
+                            
+                            for i, letter in enumerate(letters):
+                                # Determine which phoneme this letter belongs to
+                                phoneme_idx = min(int(i / letters_per_phoneme), num_phonemes - 1)
+                                phoneme = phoneme_details[phoneme_idx]
+                                
+                                # Determine color based on phoneme score
+                                if phoneme.score >= 70:
+                                    letter_color = "#28a745"  # Green
+                                elif phoneme.score >= 40:
+                                    letter_color = "#ffc107"  # Yellow
+                                else:
+                                    letter_color = "#dc3545"  # Red
+                                
+                                word_html_parts.append(f'<span style="color: {letter_color};">{html.escape(letter)}</span>')
+                            
+                            # Color each IPA phoneme based on its score
+                            for phoneme in phoneme_details:
+                                if phoneme.score >= 70:
+                                    phoneme_color = "#28a745"  # Green
+                                elif phoneme.score >= 40:
+                                    phoneme_color = "#ffc107"  # Yellow
+                                else:
+                                    phoneme_color = "#dc3545"  # Red
+                                
+                                ipa_html_parts.append(f'<span style="color: {phoneme_color};">{html.escape(phoneme.ipa)}</span>')
+                            
+                            colored_word = ''.join(word_html_parts)
+                            colored_ipa = ' '.join(ipa_html_parts)
+                        else:
+                            # Fallback: color entire word based on overall score
+                            if score >= 70:
+                                color = "#28a745"
+                            elif score >= 40:
+                                color = "#ffc107"
+                            else:
+                                color = "#dc3545"
+                            colored_word = f'<span style="color: {color};">{html.escape(word)}</span>'
+                            colored_ipa = f'<span style="color: {color};">{html.escape(ipa_text)}</span>'
+                        
+                        # Add word with colored letters, colored IPA, and tooltip
+                        word_html = f'''<span class="word-tooltip" style="display: inline-block; text-align: center; margin: 0 8px;">
+                            <div style="font-weight: 500; border-bottom: 2px solid #dee2e6;">{colored_word}</div>
+                            <div style="font-size: 12px; margin-top: 2px; font-style: italic;">/{colored_ipa}/</div>
                             <span class="tooltiptext">{tooltip_content}</span>
                         </span>'''
                         words_html.append(word_html)
                     
                     colored_html = tooltip_css
-                    colored_html += '<div style="font-size: 18px; line-height: 2.5; padding: 15px; background-color: #f8f9fa; border-radius: 8px;">'
+                    colored_html += '<div style="font-size: 18px; line-height: 3; padding: 15px; background-color: #f8f9fa; border-radius: 8px;">'
                     colored_html += ''.join(words_html)
                     colored_html += '</div>'
                     
-                    # Legend
+                    # Hint text
                     colored_html += '''
-                    <div style="margin-top: 10px; font-size: 14px; color: #6c757d;">
-                        <span style="color: #28a745; font-weight: 600;">● Đúng (≥70)</span>
-                        <span style="margin-left: 15px; color: #ffc107; font-weight: 600;">● Gần đúng (40-69)</span>
-                        <span style="margin-left: 15px; color: #dc3545; font-weight: 600;">● Sai (<40)</span>
-                        <span style="margin-left: 20px;">💡 Di chuột lên từ để xem chi tiết lỗi</span>
+                    <div style="margin-top: 10px; font-size: 14px; color: #6c757d; text-align: center;">
+                        💡 Di chuột lên từ để xem chi tiết lỗi
                     </div>
                     '''
                     
@@ -436,38 +491,176 @@ def main():
                     st.info("Không có dữ liệu phân tích")
             
             with tab2:
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric(
-                        "Nhấn & Nhịp ",
-                        f"{results.proficiency_scores.stress_and_rhythm*2:.1f}/10",
-                        help="Thang điểm 1-5, chuyển thành 2-10. Điểm càng cao càng tốt."
-                    )
-                with col2:
-                    st.metric(
-                        "Ngữ Điệu ",
-                        f"{results.proficiency_scores.intonation*2:.1f}/10",
-                        help="Thang điểm 1-5, chuyển thành 2-10. Điểm càng cao càng tốt."
-                    )
-                # Phân tích ngữ điệu
-                st.markdown("<b>🎵 Phân Tích Ngữ Điệu</b>", unsafe_allow_html=True)
-                prosody = results.prosody_analysis
-                st.markdown(f"<b>Ngữ điệu</b><br>{prosody.intonation_status}", unsafe_allow_html=True)
-                st.markdown(f"<b>Kết thúc câu</b><br>{prosody.sentence_ending}", unsafe_allow_html=True)
-                st.markdown(f"<b>Khoảng dừng</b><br>{prosody.pauses}", unsafe_allow_html=True)
-            
-            with tab3:
-                # Fluency scores
-                st.subheader("Điểm Lưu Loát")
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("Phân Đoạn", f"{results.proficiency_scores.chunking*2:.1f}/10")
-                with col2:
-                    st.metric("Tốc Độ & Dừng", f"{results.proficiency_scores.speed_and_pause*2:.1f}/10")
+                # All detailed metrics with beautiful design
                 
-                # Overall results
-                st.subheader("Tổng Quan")
-                render_overall_results(results)
+                # Pronunciation scores section with colored cards
+                st.markdown("### 🎯 Điểm Phát Âm")
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    score = results.proficiency_scores.acoustic_score/10
+                    color = "#28a745" if score >= 7 else "#ffc107" if score >= 5 else "#dc3545"
+                    st.markdown(
+                        f"""
+                        <div style="background: linear-gradient(135deg, {color}22 0%, {color}11 100%); 
+                                    border-left: 4px solid {color}; 
+                                    padding: 20px; 
+                                    border-radius: 10px; 
+                                    margin-bottom: 10px;">
+                            <div style="color: #6c757d; font-size: 14px; margin-bottom: 5px;">Âm học</div>
+                            <div style="color: {color}; font-size: 32px; font-weight: 700;">{score:.1f}<span style="font-size: 18px;">/10</span></div>
+                            <div style="color: #6c757d; font-size: 12px; margin-top: 5px;">Chất lượng âm thanh</div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                
+                with col2:
+                    score = results.proficiency_scores.holistic_score*2
+                    color = "#28a745" if score >= 7 else "#ffc107" if score >= 5 else "#dc3545"
+                    st.markdown(
+                        f"""
+                        <div style="background: linear-gradient(135deg, {color}22 0%, {color}11 100%); 
+                                    border-left: 4px solid {color}; 
+                                    padding: 20px; 
+                                    border-radius: 10px; 
+                                    margin-bottom: 10px;">
+                            <div style="color: #6c757d; font-size: 14px; margin-bottom: 5px;">Tổng quát</div>
+                            <div style="color: {color}; font-size: 32px; font-weight: 700;">{score:.1f}<span style="font-size: 18px;">/10</span></div>
+                            <div style="color: #6c757d; font-size: 12px; margin-top: 5px;">Đánh giá tổng thể</div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                
+                with col3:
+                    score = results.proficiency_scores.segmental_accuracy*2
+                    color = "#28a745" if score >= 7 else "#ffc107" if score >= 5 else "#dc3545"
+                    st.markdown(
+                        f"""
+                        <div style="background: linear-gradient(135deg, {color}22 0%, {color}11 100%); 
+                                    border-left: 4px solid {color}; 
+                                    padding: 20px; 
+                                    border-radius: 10px; 
+                                    margin-bottom: 10px;">
+                            <div style="color: #6c757d; font-size: 14px; margin-bottom: 5px;">Độ chính xác</div>
+                            <div style="color: {color}; font-size: 32px; font-weight: 700;">{score:.1f}<span style="font-size: 18px;">/10</span></div>
+                            <div style="color: #6c757d; font-size: 12px; margin-top: 5px;">Chính xác âm vị</div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                
+                # Prosody & Fluency scores section with colored cards
+                st.markdown("### 🎵 Điểm Ngữ Điệu & Lưu Loát")
+                col1, col2, col3, col4 = st.columns(4)
+                
+                with col1:
+                    score = results.proficiency_scores.stress_and_rhythm*2
+                    color = "#28a745" if score >= 7 else "#ffc107" if score >= 5 else "#dc3545"
+                    st.markdown(
+                        f"""
+                        <div style="background: linear-gradient(135deg, {color}22 0%, {color}11 100%); 
+                                    border-left: 4px solid {color}; 
+                                    padding: 15px; 
+                                    border-radius: 10px; 
+                                    margin-bottom: 10px;">
+                            <div style="color: #6c757d; font-size: 13px; margin-bottom: 5px;">Nhấn & Nhịp</div>
+                            <div style="color: {color}; font-size: 28px; font-weight: 700;">{score:.1f}<span style="font-size: 16px;">/10</span></div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                
+                with col2:
+                    score = results.proficiency_scores.intonation*2
+                    color = "#28a745" if score >= 7 else "#ffc107" if score >= 5 else "#dc3545"
+                    st.markdown(
+                        f"""
+                        <div style="background: linear-gradient(135deg, {color}22 0%, {color}11 100%); 
+                                    border-left: 4px solid {color}; 
+                                    padding: 15px; 
+                                    border-radius: 10px; 
+                                    margin-bottom: 10px;">
+                            <div style="color: #6c757d; font-size: 13px; margin-bottom: 5px;">Ngữ Điệu</div>
+                            <div style="color: {color}; font-size: 28px; font-weight: 700;">{score:.1f}<span style="font-size: 16px;">/10</span></div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                
+                with col3:
+                    score = results.proficiency_scores.chunking*2
+                    color = "#28a745" if score >= 7 else "#ffc107" if score >= 5 else "#dc3545"
+                    st.markdown(
+                        f"""
+                        <div style="background: linear-gradient(135deg, {color}22 0%, {color}11 100%); 
+                                    border-left: 4px solid {color}; 
+                                    padding: 15px; 
+                                    border-radius: 10px; 
+                                    margin-bottom: 10px;">
+                            <div style="color: #6c757d; font-size: 13px; margin-bottom: 5px;">Phân Đoạn</div>
+                            <div style="color: {color}; font-size: 28px; font-weight: 700;">{score:.1f}<span style="font-size: 16px;">/10</span></div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                
+                with col4:
+                    score = results.proficiency_scores.speed_and_pause*2
+                    color = "#28a745" if score >= 7 else "#ffc107" if score >= 5 else "#dc3545"
+                    st.markdown(
+                        f"""
+                        <div style="background: linear-gradient(135deg, {color}22 0%, {color}11 100%); 
+                                    border-left: 4px solid {color}; 
+                                    padding: 15px; 
+                                    border-radius: 10px; 
+                                    margin-bottom: 10px;">
+                            <div style="color: #6c757d; font-size: 13px; margin-bottom: 5px;">Tốc Độ & Dừng</div>
+                            <div style="color: {color}; font-size: 28px; font-weight: 700;">{score:.1f}<span style="font-size: 16px;">/10</span></div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                
+                # Prosody analysis detail with icons and colored boxes
+                st.markdown("### 🎙️ Đánh Giá Chi Tiết")
+                prosody = results.prosody_analysis
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    status_color = "#28a745" if prosody.sentence_ending == "Normal" else "#ffc107"
+                    st.markdown(
+                        f"""
+                        <div style="background-color: #f8f9fa; 
+                                    padding: 20px; 
+                                    border-radius: 10px; 
+                                    border-top: 3px solid {status_color};
+                                    text-align: center;">
+                            <div style="font-size: 24px; margin-bottom: 10px;">🎬</div>
+                            <div style="color: #495057; font-weight: 600; margin-bottom: 5px;">Kết thúc câu</div>
+                            <div style="color: {status_color}; font-size: 18px; font-weight: 600;">{prosody.sentence_ending}</div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                
+                with col2:
+                    status_color = "#28a745" if prosody.pauses == "Natural" else "#dc3545"
+                    st.markdown(
+                        f"""
+                        <div style="background-color: #f8f9fa; 
+                                    padding: 20px; 
+                                    border-radius: 10px; 
+                                    border-top: 3px solid {status_color};
+                                    text-align: center;">
+                            <div style="font-size: 24px; margin-bottom: 10px;">⏸️</div>
+                            <div style="color: #495057; font-weight: 600; margin-bottom: 5px;">Khoảng dừng</div>
+                            <div style="color: {status_color}; font-size: 18px; font-weight: 600;">{prosody.pauses}</div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
     
     # Footer - compact at bottom
     st.caption("Được xây dựng với Streamlit")

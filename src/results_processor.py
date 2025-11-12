@@ -34,12 +34,22 @@ class ProsodyAnalysis:
     pause_sentence: str = ""  # To show where [pause] occurred
 
 @dataclass
+class PhonemeDetail:
+    """Container for individual phoneme details."""
+    phoneme: str  # Phoneme symbol (e.g., "W", "IY")
+    ipa: str  # IPA symbol (e.g., "w", "i")
+    score: float  # Score for this phoneme
+    error_type: str  # Error type (correction, substitution, etc.)
+
+@dataclass
 class WordAnalysis:
     """Container for word-level analysis."""
     word: str
     score: float
     word_idx: int
     phoneme_count: int
+    ipa: str = ""  # IPA transcription for the word
+    phoneme_details: List[PhonemeDetail] = field(default_factory=list)  # Detailed phoneme info
     is_unintelligible: bool = False
     has_equal_stress: bool = False
     stress_error_info: Dict[str, Any] = field(default_factory=dict)
@@ -103,6 +113,10 @@ class ResultsProcessor:
             # Process word-level analysis from word_detail in feedback
             word_detail = feedback.get("word_detail", []) if isinstance(feedback, dict) else []
             results.word_analyses = self._extract_word_analyses_from_detail(word_detail)
+            
+            # Extract and merge IPA data from align_info
+            align_info = data.get("align_info", [])
+            self._merge_ipa_to_word_analyses(results.word_analyses, align_info)
             
             # Process phoneme errors from feedback
             results.phoneme_errors = self._extract_phoneme_errors(feedback)
@@ -220,41 +234,89 @@ class ResultsProcessor:
         word_scores = feedback.get("word_score", [])
         align_info = feedback.get("align_info", [])
         
+        # Group align_info by word_idx to get IPA for each word
+        word_ipa_map = {}
+        for align_item in align_info:
+            word_idx = align_item.get("word_idx", 0)
+            ref_ph_ipa = align_item.get("ref_ph_ipa", [])
+            if ref_ph_ipa:
+                ipa_symbol = ref_ph_ipa[0] if isinstance(ref_ph_ipa, list) else ref_ph_ipa
+                if word_idx not in word_ipa_map:
+                    word_ipa_map[word_idx] = []
+                word_ipa_map[word_idx].append(ipa_symbol)
+        
         # Create word analysis for each word
         for i, word_data in enumerate(word_scores):
             word = word_data.get("word", "")
             score = self._safe_float(word_data.get("score", 0))
+            word_idx = word_data.get("word_idx", i)
+            
+            # Get IPA for this word
+            ipa = " ".join(word_ipa_map.get(word_idx, []))
             
             # Get additional info from align_info if available
-            phoneme_count = 0
+            phoneme_count = len(word_ipa_map.get(word_idx, []))
             is_unintelligible = False
             has_equal_stress = False
             stress_errors = []
             
-            if i < len(align_info):
-                align_data = align_info[i]
-                phonemes = align_data.get("phoneme", [])
-                phoneme_count = len(phonemes)
-                
-                # Check for issues
-                for phoneme in phonemes:
-                    if phoneme.get("label") == "UNK":
-                        is_unintelligible = True
-                    if phoneme.get("equal_loudness_stress_error"):
-                        has_equal_stress = True
-                    if phoneme.get("stress_error"):
-                        stress_errors.append(phoneme.get("phoneme", ""))
+            # Note: Additional phoneme-level checks would require more processing
             
             word_analyses.append(WordAnalysis(
                 word=word,
                 score=score,
+                word_idx=word_idx,
                 phoneme_count=phoneme_count,
+                ipa=ipa,
                 is_unintelligible=is_unintelligible,
                 has_equal_stress=has_equal_stress,
-                stress_errors=stress_errors
+                stress_error_info={}
             ))
         
         return word_analyses
+    
+    def _merge_ipa_to_word_analyses(self, word_analyses: List[WordAnalysis], align_info: List[Dict[str, Any]]) -> None:
+        """Merge IPA data from align_info into word_analyses.
+        
+        Args:
+            word_analyses: List of WordAnalysis objects to update
+            align_info: align_info array from API response
+        """
+        # Group align_info by word_idx to get IPA and phoneme details for each word
+        word_data_map = {}
+        for align_item in align_info:
+            word_idx = align_item.get("word_idx", 0)
+            ref_ph_ipa = align_item.get("ref_ph_ipa", [])
+            ref_ph = align_item.get("ref_ph", "")
+            ref_ph_score = self._safe_float(align_item.get("ref_ph_adjusted_score", align_item.get("ref_ph_score", 1.0)))
+            error_type = align_item.get("phone_error_type", "correction")
+            
+            if word_idx not in word_data_map:
+                word_data_map[word_idx] = {
+                    "ipa_symbols": [],
+                    "phoneme_details": []
+                }
+            
+            if ref_ph_ipa:
+                ipa_symbol = ref_ph_ipa[0] if isinstance(ref_ph_ipa, list) else ref_ph_ipa
+                word_data_map[word_idx]["ipa_symbols"].append(ipa_symbol)
+                
+                # Create phoneme detail
+                phoneme_detail = PhonemeDetail(
+                    phoneme=ref_ph,
+                    ipa=ipa_symbol,
+                    score=ref_ph_score * 100,  # Convert to percentage
+                    error_type=error_type
+                )
+                word_data_map[word_idx]["phoneme_details"].append(phoneme_detail)
+        
+        # Update each word_analysis with its IPA and phoneme details
+        for word_analysis in word_analyses:
+            word_idx = word_analysis.word_idx
+            if word_idx in word_data_map:
+                word_data = word_data_map[word_idx]
+                word_analysis.ipa = " ".join(word_data["ipa_symbols"])
+                word_analysis.phoneme_details = word_data["phoneme_details"]
     
     def _extract_word_analyses_from_detail(self, word_detail: List[Dict[str, Any]]) -> List[WordAnalysis]:
         """Extract word-level analysis from word_detail data.
@@ -281,6 +343,7 @@ class ResultsProcessor:
                 score=score * 100,  # Convert to percentage
                 word_idx=word_idx,
                 phoneme_count=phoneme_count,
+                ipa="",  # IPA not available in word_detail, need align_info
                 is_unintelligible=is_unintelligible,
                 has_equal_stress=has_equal_stress,
                 stress_error_info=stress_error_info
