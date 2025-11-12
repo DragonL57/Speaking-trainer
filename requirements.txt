@@ -6,3 +6,5 @@ python-dotenv>=1.0.0
 numpy>=1.24.0
 soundfile>=0.12.1
 scipy>=1.11.0
+eng-to-ipa>=0.0.2
+python-Levenshtein>=0.21.0

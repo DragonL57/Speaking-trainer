@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 from typing import Dict, List, Optional, Any
 import pandas as pd
+import logging
 
 from config.settings import settings
 from config.constants import (
@@ -20,6 +21,8 @@ from src.results_processor import (
     WordAnalysis,
     PhonemeError
 )
+
+logger = logging.getLogger(__name__)
 
 def render_settings_panel():
     """Render the collapsible settings panel."""
@@ -94,33 +97,12 @@ def render_practice_script_display(script_text: str):
         """,
         unsafe_allow_html=True
     )
+    
+    # Đã xoá phần phiên âm IPA (EpitranG2P) theo yêu cầu
 
 def render_file_upload_section():
-    """Render file upload section.
-    
-    Returns:
-        uploaded_file object or None
-    """
-    st.markdown("### 📁 Tải Lên File Âm Thanh")
-    st.info("📋 **Định dạng hỗ trợ:** WAV, MP3, M4A, FLAC, OGG")
-    st.info("📏 **Yêu cầu:** Tối đa 10MB, thời lượng tối đa 5 phút")
-    
-    uploaded_file = st.file_uploader(
-        "Chọn file âm thanh",
-        type=['wav', 'mp3', 'm4a', 'flac', 'ogg'],
-        help="Tải lên file âm thanh chứa bài luyện phát âm của bạn"
-    )
-    
-    if uploaded_file and st.session_state.get("uploaded_file_name") != uploaded_file.name:
-        # New file uploaded, process it
-        from src.audio_handler import process_uploaded_audio
-        processed_audio = process_uploaded_audio(uploaded_file)
-        if processed_audio:
-            st.session_state.audio_data = processed_audio
-            st.session_state.uploaded_file_name = uploaded_file.name
-            st.session_state.audio_source = "upload"
-    
-    return uploaded_file
+    # Đã xoá toàn bộ mục tải lên file âm thanh theo yêu cầu
+    return None
 
 def render_analyze_button():
     """Render the analyze button.
