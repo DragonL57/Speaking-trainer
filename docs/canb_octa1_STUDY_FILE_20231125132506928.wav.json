@@ -1,0 +1,553 @@
+{
+    "script_text": "What? We have soccer practice!",
+    "reference_phoneme": {
+        "phoneme_sequence": "SIL W IY HH AE V S AA K ER P R AE K T IH S SIL",
+        "phoneme_number": 18
+    },
+    "predict_phoneme": {
+        "phoneme_sequence": "SIL W AH T W IY HH AE V S AH K ER P R AE K T AH S SIL",
+        "phoneme_number": 21
+    },
+    "align_info": [
+        {
+            "word": "We",
+            "word_idx": 1,
+            "ref_ph": "W",
+            "ref_ph_ipa": [
+                "w"
+            ],
+            "ref_ph_idx": 1,
+            "ref_ph_start": 130,
+            "ref_ph_end": 140,
+            "ref_ph_score": "1.000",
+            "ref_ph_adjusted_score": "0.950",
+            "phone_error_type": "correction",
+            "hyp_ph_info": [
+                {
+                    "hyp_ph": "W",
+                    "hyp_ph_ipa": [
+                        "w"
+                    ],
+                    "hyp_ph_idx": 4,
+                    "hyp_ph_start": 130,
+                    "hyp_ph_end": 140,
+                    "hyp_ph_score": "1.000"
+                }
+            ]
+        },
+        {
+            "word": "We",
+            "word_idx": 1,
+            "ref_ph": "IY",
+            "ref_ph_ipa": [
+                "i"
+            ],
+            "ref_ph_idx": 2,
+            "ref_ph_start": 140,
+            "ref_ph_end": 166,
+            "ref_ph_score": "1.000",
+            "ref_ph_adjusted_score": "0.951",
+            "phone_error_type": "correction",
+            "hyp_ph_info": [
+                {
+                    "hyp_ph": "IY",
+                    "hyp_ph_ipa": [
+                        "i"
+                    ],
+                    "hyp_ph_idx": 5,
+                    "hyp_ph_start": 140,
+                    "hyp_ph_end": 166,
+                    "hyp_ph_score": "1.000"
+                }
+            ]
+        },
+        {
+            "word": "have",
+            "word_idx": 2,
+            "ref_ph": "HH",
+            "ref_ph_ipa": [
+                "h"
+            ],
+            "ref_ph_idx": 3,
+            "ref_ph_start": 166,
+            "ref_ph_end": 184,
+            "ref_ph_score": "1.000",
+            "ref_ph_adjusted_score": "0.943",
+            "phone_error_type": "correction",
+            "hyp_ph_info": [
+                {
+                    "hyp_ph": "HH",
+                    "hyp_ph_ipa": [
+                        "h"
+                    ],
+                    "hyp_ph_idx": 6,
+                    "hyp_ph_start": 166,
+                    "hyp_ph_end": 184,
+                    "hyp_ph_score": "1.000"
+                }
+            ]
+        },
+        {
+            "word": "have",
+            "word_idx": 2,
+            "ref_ph": "AE",
+            "ref_ph_ipa": [
+                "æ"
+            ],
+            "ref_ph_idx": 4,
+            "ref_ph_start": 184,
+            "ref_ph_end": 194,
+            "ref_ph_score": "1.000",
+            "ref_ph_adjusted_score": "0.957",
+            "phone_error_type": "correction",
+            "hyp_ph_info": [
+                {
+                    "hyp_ph": "AE",
+                    "hyp_ph_ipa": [
+                        "æ"
+                    ],
+                    "hyp_ph_idx": 7,
+                    "hyp_ph_start": 184,
+                    "hyp_ph_end": 194,
+                    "hyp_ph_score": "1.000"
+                }
+            ]
+        },
+        {
+            "word": "have",
+            "word_idx": 2,
+            "ref_ph": "V",
+            "ref_ph_ipa": [
+                "v"
+            ],
+            "ref_ph_idx": 5,
+            "ref_ph_start": 194,
+            "ref_ph_end": 208,
+            "ref_ph_score": "0.999",
+            "ref_ph_adjusted_score": "0.935",
+            "phone_error_type": "correction",
+            "hyp_ph_info": [
+                {
+                    "hyp_ph": "V",
+                    "hyp_ph_ipa": [
+                        "v"
+                    ],
+                    "hyp_ph_idx": 8,
+                    "hyp_ph_start": 194,
+                    "hyp_ph_end": 208,
+                    "hyp_ph_score": "0.999"
+                }
+            ]
+        },
+        {
+            "word": "soccer",
+            "word_idx": 3,
+            "ref_ph": "S",
+            "ref_ph_ipa": [
+                "s"
+            ],
+            "ref_ph_idx": 6,
+            "ref_ph_start": 208,
+            "ref_ph_end": 222,
+            "ref_ph_score": "0.999",
+            "ref_ph_adjusted_score": "0.947",
+            "phone_error_type": "correction",
+            "hyp_ph_info": [
+                {
+                    "hyp_ph": "S",
+                    "hyp_ph_ipa": [
+                        "s"
+                    ],
+                    "hyp_ph_idx": 9,
+                    "hyp_ph_start": 208,
+                    "hyp_ph_end": 222,
+                    "hyp_ph_score": "0.999"
+                }
+            ]
+        },
+        {
+            "word": "soccer",
+            "word_idx": 3,
+            "ref_ph": "AA",
+            "ref_ph_ipa": [
+                "ɑ"
+            ],
+            "ref_ph_idx": 7,
+            "ref_ph_start": 222,
+            "ref_ph_end": 236,
+            "ref_ph_score": "0.300",
+            "ref_ph_adjusted_score": "0.290",
+            "phone_error_type": "substitution",
+            "hyp_ph_info": [
+                {
+                    "hyp_ph": "AH",
+                    "hyp_ph_ipa": [
+                        "ə"
+                    ],
+                    "hyp_ph_idx": 10,
+                    "hyp_ph_start": 222,
+                    "hyp_ph_end": 236,
+                    "hyp_ph_score": "0.993"
+                }
+            ]
+        },
+        {
+            "word": "soccer",
+            "word_idx": 3,
+            "ref_ph": "K",
+            "ref_ph_ipa": [
+                "k"
+            ],
+            "ref_ph_idx": 8,
+            "ref_ph_start": 236,
+            "ref_ph_end": 246,
+            "ref_ph_score": "0.999",
+            "ref_ph_adjusted_score": "0.911",
+            "phone_error_type": "correction",
+            "hyp_ph_info": [
+                {
+                    "hyp_ph": "K",
+                    "hyp_ph_ipa": [
+                        "k"
+                    ],
+                    "hyp_ph_idx": 11,
+                    "hyp_ph_start": 236,
+                    "hyp_ph_end": 246,
+                    "hyp_ph_score": "0.999"
+                }
+            ]
+        },
+        {
+            "word": "soccer",
+            "word_idx": 3,
+            "ref_ph": "ER",
+            "ref_ph_ipa": [
+                "ɝ"
+            ],
+            "ref_ph_idx": 9,
+            "ref_ph_start": 246,
+            "ref_ph_end": 266,
+            "ref_ph_score": "0.659",
+            "ref_ph_adjusted_score": "0.610",
+            "phone_error_type": "correction",
+            "hyp_ph_info": [
+                {
+                    "hyp_ph": "ER",
+                    "hyp_ph_ipa": [
+                        "ɝ"
+                    ],
+                    "hyp_ph_idx": 12,
+                    "hyp_ph_start": 246,
+                    "hyp_ph_end": 266,
+                    "hyp_ph_score": "0.659"
+                }
+            ]
+        },
+        {
+            "word": "practice!",
+            "word_idx": 4,
+            "ref_ph": "P",
+            "ref_ph_ipa": [
+                "p"
+            ],
+            "ref_ph_idx": 10,
+            "ref_ph_start": 266,
+            "ref_ph_end": 274,
+            "ref_ph_score": "0.993",
+            "ref_ph_adjusted_score": "0.894",
+            "phone_error_type": "correction",
+            "hyp_ph_info": [
+                {
+                    "hyp_ph": "P",
+                    "hyp_ph_ipa": [
+                        "p"
+                    ],
+                    "hyp_ph_idx": 13,
+                    "hyp_ph_start": 266,
+                    "hyp_ph_end": 274,
+                    "hyp_ph_score": "0.993"
+                }
+            ]
+        },
+        {
+            "word": "practice!",
+            "word_idx": 4,
+            "ref_ph": "R",
+            "ref_ph_ipa": [
+                "r"
+            ],
+            "ref_ph_idx": 11,
+            "ref_ph_start": 274,
+            "ref_ph_end": 284,
+            "ref_ph_score": "0.992",
+            "ref_ph_adjusted_score": "0.947",
+            "phone_error_type": "correction",
+            "hyp_ph_info": [
+                {
+                    "hyp_ph": "R",
+                    "hyp_ph_ipa": [
+                        "r"
+                    ],
+                    "hyp_ph_idx": 14,
+                    "hyp_ph_start": 274,
+                    "hyp_ph_end": 284,
+                    "hyp_ph_score": "0.992"
+                }
+            ]
+        },
+        {
+            "word": "practice!",
+            "word_idx": 4,
+            "ref_ph": "AE",
+            "ref_ph_ipa": [
+                "æ"
+            ],
+            "ref_ph_idx": 12,
+            "ref_ph_start": 284,
+            "ref_ph_end": 294,
+            "ref_ph_score": "0.999",
+            "ref_ph_adjusted_score": "0.942",
+            "phone_error_type": "correction",
+            "hyp_ph_info": [
+                {
+                    "hyp_ph": "AE",
+                    "hyp_ph_ipa": [
+                        "æ"
+                    ],
+                    "hyp_ph_idx": 15,
+                    "hyp_ph_start": 284,
+                    "hyp_ph_end": 294,
+                    "hyp_ph_score": "0.999"
+                }
+            ]
+        },
+        {
+            "word": "practice!",
+            "word_idx": 4,
+            "ref_ph": "K",
+            "ref_ph_ipa": [
+                "k"
+            ],
+            "ref_ph_idx": 13,
+            "ref_ph_start": 294,
+            "ref_ph_end": 306,
+            "ref_ph_score": "1.000",
+            "ref_ph_adjusted_score": "0.931",
+            "phone_error_type": "correction",
+            "hyp_ph_info": [
+                {
+                    "hyp_ph": "K",
+                    "hyp_ph_ipa": [
+                        "k"
+                    ],
+                    "hyp_ph_idx": 16,
+                    "hyp_ph_start": 294,
+                    "hyp_ph_end": 306,
+                    "hyp_ph_score": "1.000"
+                }
+            ]
+        },
+        {
+            "word": "practice!",
+            "word_idx": 4,
+            "ref_ph": "T",
+            "ref_ph_ipa": [
+                "t"
+            ],
+            "ref_ph_idx": 14,
+            "ref_ph_start": 306,
+            "ref_ph_end": 322,
+            "ref_ph_score": "0.993",
+            "ref_ph_adjusted_score": "0.908",
+            "phone_error_type": "correction",
+            "hyp_ph_info": [
+                {
+                    "hyp_ph": "T",
+                    "hyp_ph_ipa": [
+                        "t"
+                    ],
+                    "hyp_ph_idx": 17,
+                    "hyp_ph_start": 306,
+                    "hyp_ph_end": 322,
+                    "hyp_ph_score": "0.993"
+                }
+            ]
+        },
+        {
+            "word": "practice!",
+            "word_idx": 4,
+            "ref_ph": "IH",
+            "ref_ph_ipa": [
+                "ɪ"
+            ],
+            "ref_ph_idx": 15,
+            "ref_ph_start": 322,
+            "ref_ph_end": 342,
+            "ref_ph_score": "0.413",
+            "ref_ph_adjusted_score": "0.379",
+            "phone_error_type": "substitution",
+            "hyp_ph_info": [
+                {
+                    "hyp_ph": "AH",
+                    "hyp_ph_ipa": [
+                        "ə"
+                    ],
+                    "hyp_ph_idx": 18,
+                    "hyp_ph_start": 322,
+                    "hyp_ph_end": 342,
+                    "hyp_ph_score": "0.884"
+                }
+            ]
+        },
+        {
+            "word": "practice!",
+            "word_idx": 4,
+            "ref_ph": "S",
+            "ref_ph_ipa": [
+                "s"
+            ],
+            "ref_ph_idx": 16,
+            "ref_ph_start": 342,
+            "ref_ph_end": 506,
+            "ref_ph_score": "0.995",
+            "ref_ph_adjusted_score": "0.931",
+            "phone_error_type": "correction",
+            "hyp_ph_info": [
+                {
+                    "hyp_ph": "S",
+                    "hyp_ph_ipa": [
+                        "s"
+                    ],
+                    "hyp_ph_idx": 19,
+                    "hyp_ph_start": 342,
+                    "hyp_ph_end": 506,
+                    "hyp_ph_score": "0.995"
+                }
+            ]
+        }
+    ],
+    "score_of_refernce": "0.896",
+    "adjusted_sentence_score": "0.839",
+    "general_comment": [
+        "excellent"
+    ],
+    "feedback": {
+        "sentence_detail": {
+            "is_monotonous": false,
+            "prosody_of_sentence_end": "normal",
+            "fragmented_speech": false,
+            "awkward_pause": {
+                "flag": false,
+                "sentence": "What? We have soccer practice!"
+            }
+        },
+        "word_detail": [
+            {
+                "word": "What?",
+                "score": 0.0,
+                "ph_cnt": 0,
+                "word_idx": 1,
+                "unintelligible": true,
+                "stress_error": {},
+                "equal_stress": false
+            },
+            {
+                "word": "We",
+                "score": 0.9504999999999999,
+                "ph_cnt": 2,
+                "word_idx": 2,
+                "unintelligible": false,
+                "stress_error": {},
+                "equal_stress": false
+            },
+            {
+                "word": "have",
+                "score": 0.945,
+                "ph_cnt": 3,
+                "word_idx": 3,
+                "unintelligible": false,
+                "stress_error": {},
+                "equal_stress": false
+            },
+            {
+                "word": "soccer",
+                "score": 0.6894999999999999,
+                "ph_cnt": 4,
+                "word_idx": 4,
+                "unintelligible": false,
+                "stress_error": {
+                    "reference_stress": "1st_syllable",
+                    "user_stress": "2nd_syllable",
+                    "reference_stress_syllable": "[so]ccer",
+                    "user_stress_syllable": "so[ccer]"
+                },
+                "equal_stress": false
+            },
+            {
+                "word": "practice!",
+                "score": 0.8474285714285713,
+                "ph_cnt": 7,
+                "word_idx": 5,
+                "unintelligible": false,
+                "stress_error": {},
+                "equal_stress": false
+            }
+        ],
+        "phone_detail": [
+            {
+                "word": "soccer",
+                "word_idx": 4,
+                "error_type": "substitution",
+                "error_type2": "substitution",
+                "error_tag": "[ɑ] -> [ə]",
+                "definition": "[ɑ]음소가 [ə]음소로 대체",
+                "spell_view": "s[o]ccer"
+            }
+        ]
+    },
+    "proficiencyScore": [
+        {
+            "name": "acoustic",
+            "score": 67.0,
+            "min": 0.0,
+            "max": 100.0
+        },
+        {
+            "name": "EN_HOLISTIC",
+            "score": 3.72,
+            "min": 1.0,
+            "max": 5.0
+        },
+        {
+            "name": "EN_SEGMENTAL",
+            "score": 3.93,
+            "min": 1.0,
+            "max": 5.0
+        },
+        {
+            "name": "EN_CHUNKING",
+            "score": 3.83,
+            "min": 1.0,
+            "max": 5.0
+        },
+        {
+            "name": "EN_SPEED_PAUSE",
+            "score": 3.77,
+            "min": 1.0,
+            "max": 5.0
+        },
+        {
+            "max": 5.0,
+            "min": 1.0,
+            "score": 3.8,
+            "name": "EN_STRESS_RHYTHM"
+        },
+        {
+            "max": 5.0,
+            "min": 1.0,
+            "score": 3.785,
+            "name": "EN_INTONATION"
+        }
+    ],
+    "stt_recog": "What? We have soccer practice."
+}

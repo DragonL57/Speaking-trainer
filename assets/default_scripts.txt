@@ -1,0 +1,88 @@
+# Default Practice Scripts for Pronunciation Evaluation
+
+## Beginner Level
+
+### Basic Sentences
+1. The quick brown fox jumps over the lazy dog.
+2. How are you doing today?
+3. I would like a cup of coffee, please.
+4. The weather is nice and sunny.
+5. Can you help me with this problem?
+
+### Common Phrases
+1. Thank you very much for your help.
+2. Excuse me, where is the nearest bank?
+3. I'm sorry, I don't understand.
+4. What time does the store close?
+5. Nice to meet you!
+
+## Intermediate Level
+
+### Tongue Twisters
+1. She sells seashells by the seashore.
+2. Peter Piper picked a peck of pickled peppers.
+3. How much wood would a woodchuck chuck if a woodchuck could chuck wood?
+4. I scream, you scream, we all scream for ice cream!
+5. Betty Botter bought some butter, but she said the butter's bitter.
+
+### Phoneme-Rich Sentences
+1. The thirty-three thieves thought that they thrilled the throne throughout Thursday.
+2. Fred fed Ted bread and Ted fed Fred bread.
+3. A proper copper coffee pot.
+4. The rain in Spain stays mainly in the plain.
+5. Six sticky skeletons.
+
+## Advanced Level
+
+### Complex Sentences
+1. Despite the inclement weather, the determined hikers continued their arduous journey through the mountainous terrain.
+2. The pharmaceutical company's innovative research methodology yielded unprecedented results in clinical trials.
+3. Contemporary literature often explores themes of existential crisis and societal transformation.
+4. The archaeological excavation revealed artifacts dating back to the Mesozoic era.
+5. Quantum mechanics challenges our fundamental understanding of reality at the subatomic level.
+
+### Professional Contexts
+1. I'd like to schedule a meeting to discuss the quarterly financial projections.
+2. The implementation of our new software system will significantly improve operational efficiency.
+3. Could you please elaborate on your methodology for data analysis?
+4. Our strategic initiative focuses on sustainable development and corporate social responsibility.
+5. The presentation will cover market trends, competitive analysis, and growth opportunities.
+
+## Prosody Practice
+
+### Questions and Statements
+1. Are you coming to the party tonight? (Rising intonation)
+2. I can't believe you did that! (Emphasis and emotion)
+3. Would you like coffee, tea, or juice? (List intonation)
+4. That's absolutely wonderful news! (Excitement)
+5. I'm not sure if I understand correctly. (Uncertainty)
+
+### Emphasis Practice
+1. I didn't say he stole the money. (Emphasis on "I")
+2. I didn't say he stole the money. (Emphasis on "say")
+3. I didn't say he stole the money. (Emphasis on "he")
+4. I didn't say he stole the money. (Emphasis on "stole")
+5. I didn't say he stole the money. (Emphasis on "money")
+
+## Special Focus Areas
+
+### Minimal Pairs
+1. Ship / Sheep
+2. Live / Leave
+3. Think / Sink
+4. Bat / Pat
+5. Rice / Lice
+
+### Consonant Clusters
+1. Streets and streams
+2. Strengths and weaknesses
+3. Crisps and biscuits
+4. Twelfth night
+5. Scripts and transcripts
+
+### Vowel Sounds
+1. Beat, bit, bait, bet, bat
+2. Pool, pull, pole, Paul
+3. Caught, cot, coat, cut
+4. Heat, hit, hate, hat, hot
+5. Seat, sit, set, sat, sought
