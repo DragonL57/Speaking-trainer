@@ -6,15 +6,9 @@ import logging
 import numpy as np
 from typing import Optional, Tuple, Union
 import streamlit as st
-from pydub import AudioSegment
-import imageio_ffmpeg
+import soundfile as sf
+from scipy import signal
 import time
-
-# Cấu hình pydub để dùng ffmpeg từ imageio-ffmpeg
-ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
-AudioSegment.converter = ffmpeg_path
-AudioSegment.ffmpeg = ffmpeg_path
-AudioSegment.ffprobe = ffmpeg_path
 
 from config.constants import (
     SAMPLE_RATE, 
@@ -26,6 +20,48 @@ from config.constants import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def convert_audio_to_wav(audio_bytes: bytes) -> Optional[bytes]:
+    """Convert audio bytes to WAV format (mono, 16kHz, 16-bit PCM).
+    
+    Args:
+        audio_bytes: Input audio bytes in any format
+        
+    Returns:
+        WAV audio bytes or None if conversion fails
+    """
+    try:
+        # Read audio using soundfile
+        audio_data, sample_rate = sf.read(io.BytesIO(audio_bytes))
+        
+        # Convert stereo to mono if needed
+        if len(audio_data.shape) > 1:
+            audio_data = np.mean(audio_data, axis=1)
+        
+        # Resample to 16kHz if needed
+        if sample_rate != SAMPLE_RATE:
+            num_samples = int(len(audio_data) * SAMPLE_RATE / sample_rate)
+            audio_data = signal.resample(audio_data, num_samples)
+        
+        # Normalize to int16 range
+        if audio_data.dtype != np.int16:
+            # Normalize to -1.0 to 1.0 range if needed
+            if np.max(np.abs(audio_data)) > 1.0:
+                audio_data = audio_data / np.max(np.abs(audio_data))
+            # Convert to int16
+            audio_data = (audio_data * 32767).astype(np.int16)
+        
+        # Write to WAV format
+        wav_buffer = io.BytesIO()
+        sf.write(wav_buffer, audio_data, SAMPLE_RATE, format='WAV', subtype='PCM_16')
+        wav_buffer.seek(0)
+        
+        return wav_buffer.read()
+        
+    except Exception as e:
+        logger.error(f"Error converting audio: {e}")
+        return None
 
 class SimpleAudioRecorder:
     """Simplified audio recorder using st.audio_input (fallback option)."""
@@ -40,28 +76,14 @@ class SimpleAudioRecorder:
         audio_bytes = st.audio_input("Click to record", key="audio_recorder")
         
         if audio_bytes:
-            # Convert to WAV if needed
+            # Convert to WAV format
             try:
-                audio = AudioSegment.from_file(io.BytesIO(audio_bytes))
-                
-                # Convert to standard format required by API
-                # Mono channel
-                audio = audio.set_channels(CHANNELS)
-                # 16kHz sample rate
-                audio = audio.set_frame_rate(SAMPLE_RATE)
-                # 16-bit sample width
-                audio = audio.set_sample_width(2)  # 2 bytes = 16 bits
-                
-                # Export as WAV with specific parameters
-                wav_buffer = io.BytesIO()
-                audio.export(
-                    wav_buffer, 
-                    format="wav",
-                    parameters=["-acodec", "pcm_s16le"]  # Force 16-bit PCM
-                )
-                wav_buffer.seek(0)
-                
-                return wav_buffer.read()
+                wav_data = convert_audio_to_wav(audio_bytes)
+                if wav_data:
+                    return wav_data
+                else:
+                    st.error("Failed to process audio recording")
+                    return None
             except Exception as e:
                 logger.error(f"Error processing audio: {e}")
                 st.error("Failed to process audio recording")
@@ -85,43 +107,35 @@ def process_uploaded_audio(uploaded_file) -> Optional[bytes]:
         # Check file size (uploaded_file.size is in bytes)
         file_size_mb = uploaded_file.size / (1024 * 1024)
         if file_size_mb > MAX_AUDIO_SIZE_MB:
-            st.error(f"File too large ({file_size_mb:.1f}MB). Maximum size is {MAX_AUDIO_SIZE_MB}MB.")
+            st.error(f"File quá lớn ({file_size_mb:.1f}MB). Kích thước tối đa là {MAX_AUDIO_SIZE_MB}MB.")
             return None
         
         # Read the uploaded file
         audio_bytes = uploaded_file.read()
         
-        # Load audio using pydub
-        audio = AudioSegment.from_file(io.BytesIO(audio_bytes))
+        # Convert to WAV format using soundfile
+        wav_data = convert_audio_to_wav(audio_bytes)
         
-        # Convert to required format
-        audio = audio.set_channels(CHANNELS)  # Mono
-        audio = audio.set_frame_rate(SAMPLE_RATE)  # 16kHz
-        audio = audio.set_sample_width(SAMPLE_WIDTH)  # 16-bit
-        
-        # Check duration
-        duration_seconds = len(audio) / 1000  # pydub uses milliseconds
-        if duration_seconds > MAX_RECORDING_DURATION:
-            st.error(f"Audio too long ({duration_seconds:.1f}s). Maximum duration is {MAX_RECORDING_DURATION}s.")
+        if not wav_data:
+            st.error("Không thể xử lý file âm thanh")
             return None
         
-        # Export as WAV with specific parameters
-        wav_buffer = io.BytesIO()
-        audio.export(
-            wav_buffer,
-            format="wav",
-            parameters=["-acodec", "pcm_s16le"]  # Force 16-bit PCM
-        )
-        wav_buffer.seek(0)
+        # Check duration
+        audio_data, sample_rate = sf.read(io.BytesIO(wav_data))
+        duration_seconds = len(audio_data) / sample_rate
+        
+        if duration_seconds > MAX_RECORDING_DURATION:
+            st.error(f"Âm thanh quá dài ({duration_seconds:.1f}s). Thời lượng tối đa là {MAX_RECORDING_DURATION}s.")
+            return None
         
         # Display success message
-        st.success(f"✅ Audio file processed successfully! Duration: {duration_seconds:.1f}s")
+        st.success(f"✅ File âm thanh đã được xử lý thành công! Thời lượng: {duration_seconds:.1f}s")
         
-        return wav_buffer.read()
+        return wav_data
         
     except Exception as e:
         logger.error(f"Error processing uploaded audio: {e}")
-        st.error(f"Failed to process audio file: {str(e)}")
+        st.error(f"Không thể xử lý file âm thanh: {str(e)}")
         return None
 
 def play_audio(audio_data: bytes):
