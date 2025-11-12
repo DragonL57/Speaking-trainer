@@ -28,10 +28,10 @@ SCORE_COLORS = {
 }
 
 # UI Text Constants
-APP_TITLE = "Pronunciation & Prosody Evaluator"
-APP_DESCRIPTION = "Practice pronunciation by reading scripts aloud and receive AI-powered feedback"
+APP_TITLE = "Đánh Giá Phát Âm & Ngữ Điệu"
+APP_DESCRIPTION = "Luyện phát âm tiếng Anh bằng cách đọc to các đoạn văn và nhận phản hồi từ AI"
 
-# Default Practice Scripts
+# Default Practice Scripts (Keep in English for pronunciation practice)
 DEFAULT_SCRIPTS = [
     "The quick brown fox jumps over the lazy dog.",
     "She sells seashells by the seashore.",
@@ -46,21 +46,21 @@ DEFAULT_SCRIPTS = [
 # Prosody Status Messages
 PROSODY_STATUS = {
     "intonation": {
-        "good": "Varied",
-        "poor": "Monotonous"
+        "good": "Đa dạng",
+        "poor": "Đơn điệu"
     },
     "sentence_ending": {
-        "normal": "Normal",
-        "rising": "Rising",
-        "falling": "Falling"
+        "normal": "Bình thường",
+        "rising": "Tăng dần",
+        "falling": "Giảm dần"
     },
     "speech_flow": {
-        "good": "Fluent",
-        "poor": "Fragmented"
+        "good": "Lưu loát",
+        "poor": "Bị phân mảnh"
     },
     "pauses": {
-        "good": "Natural",
-        "poor": "Awkward"
+        "good": "Tự nhiên",
+        "poor": "Không tự nhiên"
     }
 }
 

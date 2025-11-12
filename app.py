@@ -70,8 +70,8 @@ def main():
     st.markdown("---")
     
     # Direct recording section
-    st.markdown("### 🎤 Record Audio")
-    audio_file = st.audio_input("🎙️ Click to record your pronunciation", key="audio_recorder")
+    st.markdown("### 🎤 Thu Âm")
+    audio_file = st.audio_input("🎙️ Nhấn để ghi âm phát âm của bạn", key="audio_recorder")
     
     if audio_file:
         # Process the audio to ensure correct format
@@ -106,7 +106,7 @@ def main():
             st.session_state.audio_source = "recording"
             
         except Exception as e:
-            st.error(f"Error processing audio: {str(e)}")
+            st.error(f"Lỗi xử lý âm thanh: {str(e)}")
             logger.error(f"Audio processing error: {e}")
     
     # File upload section
@@ -115,28 +115,23 @@ def main():
     
     # Show audio player if we have audio data
     if st.session_state.get("audio_data"):
-        st.markdown("### 🔊 Your Audio")
+        st.markdown("### 🔊 Âm Thanh Của Bạn")
         render_audio_player(st.session_state.audio_data)
         
         # Show audio source info
         source = st.session_state.get("audio_source", "recording")
         if source == "upload":
-            st.info(f"📁 **Source:** Uploaded file | **Format:** WAV, Mono, 16kHz, 16-bit PCM")
+            st.info(f"📁 **Nguồn:** File tải lên | **Định dạng:** WAV, Mono, 16kHz, 16-bit PCM")
         else:
-            st.info(f"🎤 **Source:** Recording | **Format:** WAV, Mono, 16kHz, 16-bit PCM")
+            st.info(f"🎤 **Nguồn:** Ghi âm | **Định dạng:** WAV, Mono, 16kHz, 16-bit PCM")
     
     # Analyze button
     analyze_button = render_analyze_button()
     
     # Analysis logic
     if analyze_button and st.session_state.audio_data:
-        with st.spinner("🔍 Analyzing your pronunciation... This may take a few seconds."):
+        with st.spinner("🔍 Đang phân tích phát âm của bạn... Có thể mất vài giây."):
             try:
-                # Validate API key
-                if not settings.api_key:
-                    render_error_message("Please configure your API key in the settings panel")
-                    return
-                
                 # Create API client
                 api_client = PronunciationAPI(
                     api_url=settings.api_url,
@@ -154,20 +149,20 @@ def main():
                 results = processor.process_api_response(response)
                 st.session_state.analysis_results = results
                 
-                render_success_message("Analysis completed successfully!")
+                render_success_message("Phân tích hoàn tất thành công!")
                 
             except PronunciationAPIError as e:
-                render_error_message(f"API Error: {str(e)}")
+                render_error_message(f"Lỗi API: {str(e)}")
                 return
             except Exception as e:
                 logger.error(f"Unexpected error: {e}")
-                render_error_message(f"An unexpected error occurred: {str(e)}")
+                render_error_message(f"Đã xảy ra lỗi không mong muốn: {str(e)}")
                 return
     
     # Display results
     if st.session_state.analysis_results:
         st.markdown("---")
-        st.markdown("## 📊 Analysis Results")
+        st.markdown("## 📊 Kết Quả Phân Tích")
         
         results = st.session_state.analysis_results
         
@@ -196,14 +191,15 @@ def main():
         st.markdown("---")
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            if st.button("📥 Download Results (JSON)", use_container_width=True):
+            if st.button("📥 Tải Kết Quả (JSON)", width='stretch'):
                 import json
                 results_json = json.dumps(results.raw_response, indent=2)
                 st.download_button(
-                    label="Download JSON",
+                    label="Tải JSON",
                     data=results_json,
                     file_name=f"pronunciation_analysis_{int(time.time())}.json",
-                    mime="application/json"
+                    mime="application/json",
+                    width='stretch'
                 )
     
     # Footer
@@ -211,8 +207,8 @@ def main():
     st.markdown(
         """
         <div style="text-align: center; color: #6c757d;">
-            <p>Built with ❤️ using Streamlit and Phonics AI API</p>
-            <p style="font-size: 12px;">For support, please contact your administrator</p>
+            <p>Được xây dựng với ❤️ sử dụng Streamlit và Phonics AI API</p>
+            <p style="font-size: 12px;">Để được hỗ trợ, vui lòng liên hệ quản trị viên</p>
         </div>
         """,
         unsafe_allow_html=True

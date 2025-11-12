@@ -27,50 +27,40 @@ def render_settings_panel():
     if "farm2-phonics" in settings.api_url:
         settings.reset()
     
-    with st.expander("⚙️ Settings", expanded=False):
+    with st.expander("⚙️ Cài Đặt", expanded=False):
         col1, col2 = st.columns(2)
         
         with col1:
             # API URL
             api_url = st.text_input(
-                "API URL",
+                "URL API",
                 value=settings.api_url,
-                help="The Phonics API endpoint URL"
+                help="Địa chỉ API của Phonics"
             )
             settings.api_url = api_url
-            
-            # API Key
-            api_key = st.text_input(
-                "API Key",
-                value=settings.api_key or "",
-                type="password",
-                help="Your API authentication key"
-            )
-            if api_key:
-                settings.api_key = api_key
         
         with col2:
             # Reference text selection
-            script_options = ["Custom"] + DEFAULT_SCRIPTS
+            script_options = ["Tùy Chỉnh"] + DEFAULT_SCRIPTS
             selected_script = st.selectbox(
-                "Practice Script",
+                "Đoạn Văn Luyện Tập",
                 options=script_options,
                 index=1,  # Default to first practice script
-                help="Select a practice script or enter custom text"
+                help="Chọn đoạn văn luyện tập hoặc nhập văn bản tùy chỉnh"
             )
             
             # Custom text input
-            if selected_script == "Custom":
+            if selected_script == "Tùy Chỉnh":
                 reference_text = st.text_area(
-                    "Custom Script",
+                    "Văn Bản Tùy Chỉnh",
                     value="Enter your custom text here...",
                     height=100,
-                    help="Enter the text you want to practice"
+                    help="Nhập văn bản bạn muốn luyện tập"
                 )
             else:
                 reference_text = selected_script
                 st.text_area(
-                    "Selected Script",
+                    "Đoạn Văn Đã Chọn",
                     value=reference_text,
                     height=100,
                     disabled=True
@@ -79,7 +69,7 @@ def render_settings_panel():
         # Validate settings
         is_valid, error_msg = settings.validate()
         if not is_valid:
-            st.error(f"Configuration Error: {error_msg}")
+            st.error(f"Lỗi Cấu Hình: {error_msg}")
         
         return reference_text
 
@@ -89,7 +79,7 @@ def render_practice_script_display(script_text: str):
     Args:
         script_text: The script text to display
     """
-    st.markdown("### 📝 Practice Script")
+    st.markdown("### 📝 Đoạn Văn Luyện Tập")
     
     # Display script in a styled container
     st.markdown(
@@ -118,14 +108,14 @@ def render_file_upload_section():
     Returns:
         uploaded_file object or None
     """
-    st.markdown("### 📁 Upload Audio File")
-    st.info("📋 **Supported formats:** WAV, MP3, M4A, FLAC, OGG")
-    st.info("📏 **Requirements:** Max 10MB, up to 5 minutes duration")
+    st.markdown("### 📁 Tải Lên File Âm Thanh")
+    st.info("📋 **Định dạng hỗ trợ:** WAV, MP3, M4A, FLAC, OGG")
+    st.info("📏 **Yêu cầu:** Tối đa 10MB, thời lượng tối đa 5 phút")
     
     uploaded_file = st.file_uploader(
-        "Choose an audio file",
+        "Chọn file âm thanh",
         type=['wav', 'mp3', 'm4a', 'flac', 'ogg'],
-        help="Upload an audio file containing your pronunciation practice"
+        help="Tải lên file âm thanh chứa bài luyện phát âm của bạn"
     )
     
     if uploaded_file and st.session_state.get("uploaded_file_name") != uploaded_file.name:
@@ -147,8 +137,8 @@ def render_analyze_button():
     """
     st.markdown("---")
     analyze_button = st.button(
-        "🔍 Analyze Pronunciation",
-        use_container_width=True,
+        "🔍 Phân Tích Phát Âm",
+        width='stretch',
         type="primary",
         disabled=st.session_state.get("audio_data") is None
     )
@@ -162,7 +152,7 @@ def render_proficiency_scores(scores: ProficiencyScores, percentages: Dict[str, 
         scores: ProficiencyScores object
         percentages: Score percentages dictionary
     """
-    st.markdown("### 📊 Proficiency Scores")
+    st.markdown("### 📊 Điểm Thành Thạo")
     
     # Create score data for visualization
     score_data = []
@@ -223,17 +213,17 @@ def render_proficiency_scores(scores: ProficiencyScores, percentages: Dict[str, 
                 margin=dict(l=20, r=20, t=40, b=20)
             )
             
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
             
             # Display actual score value
             if data["Unit"]:
                 st.metric(
-                    label="Score",
+                    label="Điểm",
                     value=f"{data['Score']:.2f}/{data['Max']}{data['Unit']}"
                 )
             else:
                 st.metric(
-                    label="Score",
+                    label="Điểm",
                     value=f"{data['Score']:.2f}/{data['Max']}"
                 )
 
@@ -243,14 +233,14 @@ def render_prosody_analysis(prosody: ProsodyAnalysis):
     Args:
         prosody: ProsodyAnalysis object
     """
-    st.markdown("### 🎵 Prosody Analysis")
+    st.markdown("### 🎵 Phân Tích Ngữ Điệu")
     
     col1, col2, col3 = st.columns(3)
     
     indicators = [
-        ("Intonation", prosody.intonation_status, prosody.intonation_status == "Varied"),
-        ("Sentence Ending", prosody.sentence_ending, prosody.sentence_ending == "Normal"),
-        ("Pauses", prosody.pauses, prosody.pauses == "Natural")
+        ("Ngữ điệu", prosody.intonation_status, prosody.intonation_status in ["Varied", "Đa dạng"]),
+        ("Kết thúc câu", prosody.sentence_ending, prosody.sentence_ending in ["Normal", "Bình thường"]),
+        ("Khoảng dừng", prosody.pauses, prosody.pauses in ["Natural", "Tự nhiên"])
     ]
     
     for col, (label, status, is_good) in zip([col1, col2, col3], indicators):
@@ -275,22 +265,22 @@ def render_prosody_analysis(prosody: ProsodyAnalysis):
             )
     
     # Show pause location if there were awkward pauses
-    if hasattr(prosody, 'pause_sentence') and prosody.pause_sentence and prosody.pauses == "Awkward":
-        st.markdown("#### ⚠️ Awkward Pause Detected")
+    if hasattr(prosody, 'pause_sentence') and prosody.pause_sentence and prosody.pauses in ["Awkward", "Không tự nhiên"]:
+        st.markdown("#### ⚠️ Phát Hiện Khoảng Dừng Không Tự Nhiên")
         
         # Highlight [pause] markers in the sentence
         pause_sentence = prosody.pause_sentence
         if "[pause]" in pause_sentence:
             highlighted_sentence = pause_sentence.replace(
                 "[pause]", 
-                "<span style='background-color: #ff9999; font-weight: bold; padding: 2px 4px; border-radius: 3px;'>[pause]</span>"
+                "<span style='background-color: #ff9999; font-weight: bold; padding: 2px 4px; border-radius: 3px;'>[dừng]</span>"
             )
             st.markdown(
-                f"**Sentence with pause markers:** {highlighted_sentence}",
+                f"**Câu có dấu khoảng dừng:** {highlighted_sentence}",
                 unsafe_allow_html=True
             )
         else:
-            st.warning(f"Pause detected in: {pause_sentence}")
+            st.warning(f"Khoảng dừng phát hiện trong: {pause_sentence}")
 
 def render_word_analysis(word_analyses: List[WordAnalysis]):
     """Render word-by-word analysis table.
@@ -298,10 +288,10 @@ def render_word_analysis(word_analyses: List[WordAnalysis]):
     Args:
         word_analyses: List of WordAnalysis objects
     """
-    st.markdown("### 📖 Word-by-Word Analysis")
+    st.markdown("### 📖 Phân Tích Từng Từ")
     
     if not word_analyses:
-        st.info("No word analysis data available")
+        st.info("Không có dữ liệu phân tích từ")
         return
     
     # Prepare data for display
@@ -326,7 +316,8 @@ def render_word_analysis(word_analyses: List[WordAnalysis]):
     
     # Create DataFrame and display
     df = pd.DataFrame(data)
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    df.columns = ["Từ", "Vị trí", "Điểm", "Không rõ ràng", "Lỗi trọng âm"]
+    st.dataframe(df, width='stretch', hide_index=True)
 
 def _format_stress_error(stress_error_info: Dict[str, Any]) -> str:
     """Format stress error information for display.
@@ -362,24 +353,24 @@ def render_overall_results(results: ProcessedResults):
     Args:
         results: ProcessedResults object
     """
-    st.markdown("### 🎯 Overall Assessment")
+    st.markdown("### 🎯 Đánh Giá Tổng Quan")
     
     col1, col2 = st.columns(2)
     
     with col1:
         # Overall comment
-        st.info(f"**Feedback:** {results.overall_comment}")
+        st.info(f"**Nhận xét:** {results.overall_comment}")
         
         # Reference score
         score_color = "🟢" if results.reference_score >= 80 else "🟡" if results.reference_score >= 60 else "🔴"
         st.metric(
-            label="Reference Score",
+            label="Điểm Tham Chiếu",
             value=f"{score_color} {results.reference_score:.1f}%"
         )
     
     with col2:
         # Recognized text
-        st.markdown("**What we heard:**")
+        st.markdown("**Những gì chúng tôi nghe được:**")
         st.markdown(
             f"""
             <div style="
@@ -388,6 +379,7 @@ def render_overall_results(results: ProcessedResults):
                 border-radius: 5px;
                 padding: 15px;
                 font-style: italic;
+                color: #212529;
             ">
                 "{results.recognized_text}"
             </div>
@@ -422,13 +414,13 @@ def render_phoneme_errors(phoneme_errors: List[PhonemeError]):
     Args:
         phoneme_errors: List of PhonemeError objects
     """
-    st.markdown("### 🔍 Phoneme Analysis")
+    st.markdown("### 🔍 Phân Tích Âm Vị")
     
     if not phoneme_errors:
-        st.info("✅ No phoneme errors detected - excellent pronunciation!")
+        st.info("✅ Không phát hiện lỗi âm vị - phát âm xuất sắc!")
         return
     
-    st.markdown(f"**{len(phoneme_errors)} phoneme error(s) detected:**")
+    st.markdown(f"**{len(phoneme_errors)} lỗi âm vị được phát hiện:**")
     
     for i, error in enumerate(phoneme_errors, 1):
         # Create a container for each error
@@ -448,7 +440,7 @@ def render_phoneme_errors(phoneme_errors: List[PhonemeError]):
                         margin: 5px 0;
                         text-align: center;
                     ">
-                        <strong style="color: {error_color};">Error #{i}</strong><br>
+                        <strong style="color: {error_color};">Lỗi #{i}</strong><br>
                         <span style="color: {error_color};">{error.error_type.title()}</span>
                     </div>
                     """,
@@ -457,8 +449,8 @@ def render_phoneme_errors(phoneme_errors: List[PhonemeError]):
             
             with col2:
                 # Error details
-                st.markdown(f"**Word:** {error.word} (position #{error.word_idx})")
-                st.markdown(f"**Sound Error:** {error.error_tag}")
+                st.markdown(f"**Từ:** {error.word} (vị trí #{error.word_idx})")
+                st.markdown(f"**Lỗi âm thanh:** {error.error_tag}")
                 
                 # Highlighted spell view
                 if error.spell_view:
@@ -477,13 +469,13 @@ def render_phoneme_errors(phoneme_errors: List[PhonemeError]):
                         highlighted_word = error.spell_view
                     
                     st.markdown(
-                        f"**Spelling:** {highlighted_word}",
+                        f"**Chính tả:** {highlighted_word}",
                         unsafe_allow_html=True
                     )
                 
                 # Definition if available (Korean definition)
                 if error.definition:
-                    st.markdown(f"**Description:** {error.definition}")
+                    st.markdown(f"**Mô tả:** {error.definition}")
             
             # Add separator line
             if i < len(phoneme_errors):
