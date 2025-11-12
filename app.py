@@ -100,30 +100,16 @@ def main():
             audio_file.seek(0)
             raw_audio = audio_file.read()
             
-            # Convert to proper format using pydub
-            from pydub import AudioSegment
-            import io
+            # Convert to proper format using soundfile
+            from src.audio_handler import convert_audio_to_wav
             
-            # Load the audio
-            audio = AudioSegment.from_file(io.BytesIO(raw_audio))
+            audio_data = convert_audio_to_wav(raw_audio)
             
-            # Convert to required format: mono, 16kHz, 16-bit PCM
-            audio = audio.set_channels(1)  # Mono
-            audio = audio.set_frame_rate(16000)  # 16kHz
-            audio = audio.set_sample_width(2)  # 16-bit
-            
-            # Export as WAV
-            wav_buffer = io.BytesIO()
-            audio.export(
-                wav_buffer, 
-                format="wav",
-                parameters=["-acodec", "pcm_s16le"]  # Force 16-bit PCM
-            )
-            wav_buffer.seek(0)
-            audio_data = wav_buffer.read()
-            
-            st.session_state.audio_data = audio_data
-            st.session_state.audio_source = "recording"
+            if audio_data:
+                st.session_state.audio_data = audio_data
+                st.session_state.audio_source = "recording"
+            else:
+                st.error("Không thể xử lý âm thanh")
             
         except Exception as e:
             st.error(f"Lỗi xử lý âm thanh: {str(e)}")
