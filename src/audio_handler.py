@@ -7,6 +7,9 @@ import numpy as np
 from typing import Optional, Tuple, Union
 import streamlit as st
 from pydub import AudioSegment
+import imageio_ffmpeg
+AudioSegment.converter = imageio_ffmpeg.get_ffmpeg_exe()
+AudioSegment.ffprobe   = imageio_ffmpeg.get_ffprobe_exe()
 import time
 
 from config.constants import (
