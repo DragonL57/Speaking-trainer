@@ -30,14 +30,7 @@ def render_settings_panel():
     with st.expander("⚙️ Cài Đặt", expanded=False):
         col1, col2 = st.columns(2)
         
-        with col1:
-            # API URL
-            api_url = st.text_input(
-                "URL API",
-                value=settings.api_url,
-                help="Địa chỉ API của Phonics"
-            )
-            settings.api_url = api_url
+        # Không hiển thị trường URL API trên UI nữa
         
         with col2:
             # Reference text selection
@@ -172,8 +165,18 @@ def render_proficiency_scores(scores: ProficiencyScores, percentages: Dict[str, 
         else:
             color = SCORE_COLORS["needs_improvement"]
         
+        # Dịch tên gauge sang tiếng Việt
+        vi_names = {
+            "holistic_score": "Điểm tổng quan",
+            "segmental_accuracy": "Độ chính xác âm vị",
+            "chunking": "Nhóm từ/cụm từ",
+            "speed_and_pause": "Tốc độ & khoảng dừng",
+            "stress_and_rhythm": "Trọng âm & nhịp điệu",
+            "intonation": "Ngữ điệu"
+        }
+        vi_category = vi_names.get(score_name, score_name.replace("_", " ").title())
         score_data.append({
-            "Category": score_name.replace("_", " ").title(),
+            "Category": vi_category,
             "Score": score_value,
             "Percentage": percentage,
             "Color": color,
@@ -473,9 +476,8 @@ def render_phoneme_errors(phoneme_errors: List[PhonemeError]):
                         unsafe_allow_html=True
                     )
                 
-                # Definition if available (Korean definition)
-                if error.definition:
-                    st.markdown(f"**Mô tả:** {error.definition}")
+                # Ẩn mô tả nếu là tiếng Hàn hoặc không phải tiếng Việt/Anh
+                # Không hiển thị mô tả
             
             # Add separator line
             if i < len(phoneme_errors):

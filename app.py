@@ -5,7 +5,7 @@ import logging
 from typing import Optional
 import time
 
-from config.constants import APP_TITLE, APP_DESCRIPTION
+from config.constants import APP_TITLE, APP_DESCRIPTION, DEFAULT_SCRIPTS
 from config.settings import settings
 from src.api_client import PronunciationAPI, PronunciationAPIError
 from src.audio_handler import SimpleAudioRecorder, play_audio
@@ -59,10 +59,30 @@ def main():
     st.markdown(APP_DESCRIPTION)
     st.markdown("---")
     
-    # Settings panel
-    reference_text = render_settings_panel()
+    # Practice script selection (đưa ra ngoài, không dùng panel)
+    script_options = ["Tùy Chỉnh"] + DEFAULT_SCRIPTS
+    selected_script = st.selectbox(
+        "Đoạn Văn Luyện Tập",
+        options=script_options,
+        index=1,
+        help="Chọn đoạn văn luyện tập hoặc nhập văn bản tùy chỉnh"
+    )
+    if selected_script == "Tùy Chỉnh":
+        reference_text = st.text_area(
+            "Văn Bản Tùy Chỉnh",
+            value="Enter your custom text here...",
+            height=100,
+            help="Nhập văn bản bạn muốn luyện tập"
+        )
+    else:
+        reference_text = selected_script
+        st.text_area(
+            "Đoạn Văn Đã Chọn",
+            value=reference_text,
+            height=100,
+            disabled=True
+        )
     st.session_state.reference_text = reference_text
-    
     # Practice script display
     render_practice_script_display(reference_text)
     
