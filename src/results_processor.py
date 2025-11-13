@@ -177,6 +177,7 @@ class ResultsProcessor:
         # Extract prosody indicators
         is_monotonous = sentence_detail.get("is_monotonous", False)
         prosody_of_sentence_end = sentence_detail.get("prosody_of_sentence_end", "normal")
+        fragmented_speech = sentence_detail.get("fragmented_speech", False)
         
         # Extract awkward pause info using the flag field
         awkward_pause = sentence_detail.get("awkward_pause", {})
@@ -190,11 +191,14 @@ class ResultsProcessor:
         elif prosody_of_sentence_end == "awkward_falling":
             sentence_ending_status = "Falling"
         
+        # Determine speech flow based on fragmented_speech
+        speech_flow_status = "Ngắt quãng" if fragmented_speech else "Trôi chảy"
+        
         # Create prosody analysis with pause info
         analysis = ProsodyAnalysis(
             intonation_status=PROSODY_STATUS["intonation"]["poor" if is_monotonous else "good"],
             sentence_ending=sentence_ending_status,
-            speech_flow=PROSODY_STATUS["speech_flow"]["good"],  # Not directly provided
+            speech_flow=speech_flow_status,
             pauses="Awkward" if has_awkward_pause else "Natural"
         )
         

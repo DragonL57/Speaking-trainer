@@ -165,6 +165,49 @@ def main():
                 # Overall results first
                 render_overall_results(results)
                 
+                # Show reference vs predicted phonemes comparison
+                st.markdown("### 📊 So Sánh Âm Vị")
+                col_ref, col_pred = st.columns(2)
+                
+                with col_ref:
+                    ref_phoneme_data = results.raw_response.get("data", {}).get("reference_phoneme", {})
+                    ref_count = ref_phoneme_data.get("phoneme_number", 0)
+                    ref_sequence = ref_phoneme_data.get("phoneme_sequence", "")
+                    st.markdown(
+                        f"""
+                        <div style="background: linear-gradient(135deg, #17a2b822 0%, #17a2b811 100%); 
+                                    border-left: 4px solid #17a2b8; 
+                                    padding: 15px; 
+                                    border-radius: 10px;">
+                            <div style="color: #6c757d; font-size: 13px; margin-bottom: 5px;">Âm Vị Tham Chiếu (Chuẩn)</div>
+                            <div style="color: #17a2b8; font-size: 20px; font-weight: 700; margin-bottom: 8px;">{ref_count} âm vị</div>
+                            <div style="color: #495057; font-size: 12px; font-family: monospace; word-break: break-all;">{ref_sequence}</div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                
+                with col_pred:
+                    pred_phoneme_data = results.raw_response.get("data", {}).get("predict_phoneme", {})
+                    pred_count = pred_phoneme_data.get("phoneme_number", 0)
+                    pred_sequence = pred_phoneme_data.get("phoneme_sequence", "")
+                    diff_color = "#28a745" if pred_count == ref_count else "#ffc107"
+                    st.markdown(
+                        f"""
+                        <div style="background: linear-gradient(135deg, {diff_color}22 0%, {diff_color}11 100%); 
+                                    border-left: 4px solid {diff_color}; 
+                                    padding: 15px; 
+                                    border-radius: 10px;">
+                            <div style="color: #6c757d; font-size: 13px; margin-bottom: 5px;">Âm Vị Nhận Diện (Thực tế)</div>
+                            <div style="color: {diff_color}; font-size: 20px; font-weight: 700; margin-bottom: 8px;">{pred_count} âm vị</div>
+                            <div style="color: #495057; font-size: 12px; font-family: monospace; word-break: break-all;">{pred_sequence}</div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                
+                st.markdown("---")
+                
                 # Colored word display - hiển thị từng từ với màu sắc
                 st.subheader("Phân Tích Từng Từ")
                 if results.word_analyses:
@@ -272,10 +315,32 @@ def main():
                         score = word_analysis.score
                         word_idx = word_analysis.word_idx
                         phoneme_details = word_analysis.phoneme_details
+                        is_unintelligible = word_analysis.is_unintelligible
+                        stress_error_info = word_analysis.stress_error_info
                         
                         # Build tooltip content with detailed error info
                         word_key = f"{word_analysis.word}_{word_idx}"
                         tooltip_parts = [f'<div class="tooltip-score">📊 Điểm: {score:.0f}/100</div>']
+                        
+                        # Special handling for unintelligible words
+                        if is_unintelligible:
+                            tooltip_parts.append(f'<div class="tooltip-error-title">⚠️ Không nhận diện được</div>')
+                            tooltip_parts.append(f'<div class="tooltip-error-detail">Từ này không được phát âm rõ ràng</div>')
+                        
+                        # Add stress error if present
+                        if stress_error_info and isinstance(stress_error_info, dict):
+                            ref_stress = stress_error_info.get("reference_stress", "")
+                            user_stress = stress_error_info.get("user_stress", "")
+                            if ref_stress and user_stress:
+                                stress_map = {
+                                    "1st_syllable": "Âm tiết thứ 1",
+                                    "2nd_syllable": "Âm tiết thứ 2",
+                                    "3rd_syllable": "Âm tiết thứ 3"
+                                }
+                                ref_vn = stress_map.get(ref_stress, ref_stress)
+                                user_vn = stress_map.get(user_stress, user_stress)
+                                tooltip_parts.append(f'<div class="tooltip-error-title">🎯 Lỗi trọng âm</div>')
+                                tooltip_parts.append(f'<div class="tooltip-error-detail">Chuẩn: {ref_vn}<br>Bạn: {user_vn}</div>')
                         
                         # Add phoneme-level details if available (only show errors)
                         if phoneme_details and len(phoneme_details) > 0:
@@ -321,8 +386,12 @@ def main():
                         ipa_html_parts = []
                         ipa_text = word_analysis.ipa if word_analysis.ipa else ""
                         
-                        # Color each letter based on corresponding phoneme score
-                        if phoneme_details and len(phoneme_details) > 0:
+                        # Special styling for unintelligible words
+                        if is_unintelligible:
+                            # Gray out unintelligible words
+                            colored_word = f'<span style="color: #6c757d; text-decoration: line-through;">{html.escape(word)}</span>'
+                            colored_ipa = f'<span style="color: #6c757d; font-style: italic;">không nhận diện</span>'
+                        elif phoneme_details and len(phoneme_details) > 0:
                             # Simple heuristic: distribute letters across phonemes
                             letters = list(word)
                             num_letters = len(letters)
@@ -507,9 +576,11 @@ def main():
                                     padding: 20px; 
                                     border-radius: 10px; 
                                     margin-bottom: 10px;">
-                            <div style="color: #6c757d; font-size: 14px; margin-bottom: 5px;">Âm học</div>
+                            <div style="color: #6c757d; font-size: 14px; margin-bottom: 5px;">
+                                Âm học <span style="cursor: help;" title="Chất lượng âm thanh tổng thể của giọng nói (0-100)">ℹ️</span>
+                            </div>
                             <div style="color: {color}; font-size: 32px; font-weight: 700;">{score:.1f}<span style="font-size: 18px;">/10</span></div>
-                            <div style="color: #6c757d; font-size: 12px; margin-top: 5px;">Chất lượng âm thanh</div>
+                            <div style="color: #6c757d; font-size: 12px; margin-top: 5px;">Độ rõ ràng của âm thanh</div>
                         </div>
                         """,
                         unsafe_allow_html=True
@@ -525,9 +596,11 @@ def main():
                                     padding: 20px; 
                                     border-radius: 10px; 
                                     margin-bottom: 10px;">
-                            <div style="color: #6c757d; font-size: 14px; margin-bottom: 5px;">Tổng quát</div>
+                            <div style="color: #6c757d; font-size: 14px; margin-bottom: 5px;">
+                                Tổng quát <span style="cursor: help;" title="Đánh giá toàn diện khả năng phát âm (1-5)">ℹ️</span>
+                            </div>
                             <div style="color: {color}; font-size: 32px; font-weight: 700;">{score:.1f}<span style="font-size: 18px;">/10</span></div>
-                            <div style="color: #6c757d; font-size: 12px; margin-top: 5px;">Đánh giá tổng thể</div>
+                            <div style="color: #6c757d; font-size: 12px; margin-top: 5px;">Mức độ thành thạo tổng thể</div>
                         </div>
                         """,
                         unsafe_allow_html=True
@@ -543,9 +616,11 @@ def main():
                                     padding: 20px; 
                                     border-radius: 10px; 
                                     margin-bottom: 10px;">
-                            <div style="color: #6c757d; font-size: 14px; margin-bottom: 5px;">Độ chính xác</div>
+                            <div style="color: #6c757d; font-size: 14px; margin-bottom: 5px;">
+                                Độ chính xác <span style="cursor: help;" title="Độ chính xác phát âm từng âm vị (1-5)">ℹ️</span>
+                            </div>
                             <div style="color: {color}; font-size: 32px; font-weight: 700;">{score:.1f}<span style="font-size: 18px;">/10</span></div>
-                            <div style="color: #6c757d; font-size: 12px; margin-top: 5px;">Chính xác âm vị</div>
+                            <div style="color: #6c757d; font-size: 12px; margin-top: 5px;">Chính xác từng âm</div>
                         </div>
                         """,
                         unsafe_allow_html=True
@@ -565,7 +640,9 @@ def main():
                                     padding: 15px; 
                                     border-radius: 10px; 
                                     margin-bottom: 10px;">
-                            <div style="color: #6c757d; font-size: 13px; margin-bottom: 5px;">Nhấn & Nhịp</div>
+                            <div style="color: #6c757d; font-size: 13px; margin-bottom: 5px;">
+                                Nhấn & Nhịp <span style="cursor: help;" title="Trọng âm từ và nhịp điệu câu (1-5)">ℹ️</span>
+                            </div>
                             <div style="color: {color}; font-size: 28px; font-weight: 700;">{score:.1f}<span style="font-size: 16px;">/10</span></div>
                         </div>
                         """,
@@ -582,7 +659,9 @@ def main():
                                     padding: 15px; 
                                     border-radius: 10px; 
                                     margin-bottom: 10px;">
-                            <div style="color: #6c757d; font-size: 13px; margin-bottom: 5px;">Ngữ Điệu</div>
+                            <div style="color: #6c757d; font-size: 13px; margin-bottom: 5px;">
+                                Ngữ Điệu <span style="cursor: help;" title="Biến thiên cao độ giọng nói (1-5)">ℹ️</span>
+                            </div>
                             <div style="color: {color}; font-size: 28px; font-weight: 700;">{score:.1f}<span style="font-size: 16px;">/10</span></div>
                         </div>
                         """,
@@ -599,7 +678,9 @@ def main():
                                     padding: 15px; 
                                     border-radius: 10px; 
                                     margin-bottom: 10px;">
-                            <div style="color: #6c757d; font-size: 13px; margin-bottom: 5px;">Phân Đoạn</div>
+                            <div style="color: #6c757d; font-size: 13px; margin-bottom: 5px;">
+                                Phân Đoạn <span style="cursor: help;" title="Cách nhóm từ và ngắt nghỉ câu (1-5)">ℹ️</span>
+                            </div>
                             <div style="color: {color}; font-size: 28px; font-weight: 700;">{score:.1f}<span style="font-size: 16px;">/10</span></div>
                         </div>
                         """,
@@ -616,7 +697,9 @@ def main():
                                     padding: 15px; 
                                     border-radius: 10px; 
                                     margin-bottom: 10px;">
-                            <div style="color: #6c757d; font-size: 13px; margin-bottom: 5px;">Tốc Độ & Dừng</div>
+                            <div style="color: #6c757d; font-size: 13px; margin-bottom: 5px;">
+                                Tốc Độ & Dừng <span style="cursor: help;" title="Tốc độ nói và khoảng dừng hợp lý (1-5)">ℹ️</span>
+                            </div>
                             <div style="color: {color}; font-size: 28px; font-weight: 700;">{score:.1f}<span style="font-size: 16px;">/10</span></div>
                         </div>
                         """,
@@ -626,7 +709,7 @@ def main():
                 # Prosody analysis detail with icons and colored boxes
                 st.markdown("### 🎙️ Đánh Giá Chi Tiết")
                 prosody = results.prosody_analysis
-                col1, col2 = st.columns(2)
+                col1, col2, col3 = st.columns(3)
                 
                 with col1:
                     status_color = "#28a745" if prosody.sentence_ending == "Normal" else "#ffc107"
@@ -646,6 +729,23 @@ def main():
                     )
                 
                 with col2:
+                    status_color = "#28a745" if prosody.speech_flow == "Trôi chảy" else "#dc3545"
+                    st.markdown(
+                        f"""
+                        <div style="background-color: #f8f9fa; 
+                                    padding: 20px; 
+                                    border-radius: 10px; 
+                                    border-top: 3px solid {status_color};
+                                    text-align: center;">
+                            <div style="font-size: 24px; margin-bottom: 10px;">🌊</div>
+                            <div style="color: #495057; font-weight: 600; margin-bottom: 5px;">Dòng chảy lời nói</div>
+                            <div style="color: {status_color}; font-size: 18px; font-weight: 600;">{prosody.speech_flow}</div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                
+                with col3:
                     status_color = "#28a745" if prosody.pauses == "Natural" else "#dc3545"
                     st.markdown(
                         f"""
