@@ -8,3 +8,20 @@ soundfile>=0.12.1
 scipy>=1.11.0
 eng-to-ipa>=0.0.2
 python-Levenshtein>=0.21.0
+
+# Offline pronunciation analysis
+openai-whisper>=20231117
+librosa>=0.10.1
+phonemizer>=3.2.1
+transformers>=4.35.0
+torch>=2.1.0
+torchaudio>=2.1.0
+praat-parselmouth>=0.4.3
+dtaidistance>=2.3.10
+fastdtw>=0.3.4
+
+# Advanced pronunciation evaluation
+nltk>=3.8.1
+pronouncing>=0.2.0
+montreal-forced-aligner>=2.2.17
+praatio>=6.0.0

@@ -6,8 +6,9 @@ from typing import Optional
 import time
 
 from config.constants import APP_TITLE, APP_DESCRIPTION, DEFAULT_SCRIPTS
-from config.settings import settings
-from src.api_client import PronunciationAPI, PronunciationAPIError
+from config.offline_settings import offline_settings
+from src.offline_analyzer import OfflinePronunciationAnalyzer, OfflineAnalyzerError
+from src.advanced_pronunciation_analyzer import EnhancedOfflineAnalyzer
 from src.audio_handler import SimpleAudioRecorder, play_audio
 from src.results_processor import ResultsProcessor
 from src.ui_components import (
@@ -25,7 +26,6 @@ from src.ui_components import (
     render_success_message,
     render_audio_player
 )
-# Đã xoá import ui_epitran
 
 # Configure logging
 logging.basicConfig(
@@ -51,12 +51,65 @@ if "analysis_results" not in st.session_state:
     st.session_state.analysis_results = None
 if "reference_text" not in st.session_state:
     st.session_state.reference_text = ""
+if "offline_analyzer" not in st.session_state:
+    st.session_state.offline_analyzer = None
+if "use_enhanced" not in st.session_state:
+    st.session_state.use_enhanced = True
+    st.session_state.analysis_results = None
+if "reference_text" not in st.session_state:
+    st.session_state.reference_text = ""
 
 def main():
     """Main application logic."""
     
     # Header - compact
     st.title(APP_TITLE)
+    
+    # Add model settings in sidebar
+    with st.sidebar:
+        st.markdown("### ⚙️ Cài Đặt Mô Hình AI")
+        st.info("🤖 Sử dụng mô hình AI offline")
+        
+        # Analysis mode selection
+        use_enhanced = st.toggle(
+            "🎓 Chế độ Nâng Cao (CMUdict + Praat)",
+            value=st.session_state.use_enhanced,
+            help="Bật để sử dụng phân tích nâng cao với CMUdict, GOP scoring, và Praat prosody analysis. Chính xác hơn nhưng chậm hơn."
+        )
+        
+        if use_enhanced != st.session_state.use_enhanced:
+            st.session_state.use_enhanced = use_enhanced
+            st.session_state.offline_analyzer = None  # Reset analyzer
+            st.rerun()
+        
+        if use_enhanced:
+            st.success("✅ Sử dụng Enhanced Analyzer")
+            st.caption("• CMUdict cho phoneme chuẩn")
+            st.caption("• GOP scoring")
+            st.caption("• Praat cho prosody chi tiết")
+            st.caption("• Phát hiện lỗi stress")
+        else:
+            st.info("📊 Sử dụng Basic Analyzer")
+            st.caption("• Whisper + IPA")
+            st.caption("• Librosa features")
+            st.caption("• Nhanh hơn")
+        
+        st.markdown("---")
+        
+        whisper_model = st.selectbox(
+            "Whisper Model",
+            options=["tiny", "base", "small", "medium"],
+            index=1,
+            help="Base: Cân bằng tốc độ và độ chính xác. Small: Chính xác hơn nhưng chậm hơn."
+        )
+        offline_settings.whisper_model = whisper_model
+        
+        st.markdown("---")
+        st.markdown("**Thông tin:**")
+        st.caption("• Tiny: Nhanh nhất, độ chính xác thấp")
+        st.caption("• Base: Cân bằng (khuyến nghị)")
+        st.caption("• Small: Chính xác hơn, chậm hơn")
+        st.caption("• Medium: Chính xác nhất, rất chậm")
     
     # Main layout - 2 columns (30/70)
     col_input, col_result = st.columns([3, 7])
@@ -129,17 +182,30 @@ def main():
         if analyze_button and st.session_state.audio_data:
             with st.spinner("Đang phân tích..."):
                 try:
-                    # Create API client
-                    api_client = PronunciationAPI(
-                        api_url=settings.api_url,
-                        api_key=settings.api_key
-                    )
+                    # Initialize analyzer if needed (silently on first run)
+                    if st.session_state.offline_analyzer is None:
+                        if st.session_state.use_enhanced:
+                            st.session_state.offline_analyzer = EnhancedOfflineAnalyzer(
+                                whisper_model=offline_settings.whisper_model,
+                                device=offline_settings.device
+                            )
+                        else:
+                            st.session_state.offline_analyzer = OfflinePronunciationAnalyzer(
+                                whisper_model=offline_settings.whisper_model,
+                                device=offline_settings.device
+                            )
                     
                     # Analyze pronunciation
-                    response = api_client.analyze_pronunciation(
-                        audio_data=st.session_state.audio_data,
-                        reference_text=st.session_state.reference_text
-                    )
+                    if st.session_state.use_enhanced and hasattr(st.session_state.offline_analyzer, 'analyze_pronunciation_enhanced'):
+                        response = st.session_state.offline_analyzer.analyze_pronunciation_enhanced(
+                            audio_data=st.session_state.audio_data,
+                            reference_text=st.session_state.reference_text
+                        )
+                    else:
+                        response = st.session_state.offline_analyzer.analyze_pronunciation(
+                            audio_data=st.session_state.audio_data,
+                            reference_text=st.session_state.reference_text
+                        )
                     
                     # Process results
                     processor = ResultsProcessor()
@@ -148,10 +214,10 @@ def main():
                     
                     render_success_message("Phân tích hoàn tất!")
                     
-                except PronunciationAPIError as e:
-                    render_error_message(f"Lỗi API: {str(e)}")
+                except OfflineAnalyzerError as e:
+                    render_error_message(f"Lỗi phân tích: {str(e)}")
                 except Exception as e:
-                    logger.error(f"Unexpected error: {e}")
+                    logger.error(f"Unexpected error: {e}", exc_info=True)
                     render_error_message(f"Lỗi: {str(e)}")
         
         # Display results
@@ -239,22 +305,22 @@ def main():
                     }
                     .word-tooltip .tooltiptext {
                         visibility: hidden;
-                        width: 320px;
+                        width: 240px;
                         background-color: #2c3e50;
                         color: #fff;
                         text-align: left;
                         border-radius: 8px;
-                        padding: 12px 16px;
+                        padding: 10px 14px;
                         position: absolute;
                         z-index: 1000;
                         bottom: 125%;
                         left: 50%;
-                        margin-left: -160px;
+                        margin-left: -120px;
                         opacity: 0;
                         transition: opacity 0.3s, visibility 0.3s;
                         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                        font-size: 14px;
-                        line-height: 1.6;
+                        font-size: 13px;
+                        line-height: 1.5;
                         font-weight: normal;
                         white-space: normal;
                     }
@@ -273,36 +339,39 @@ def main():
                         opacity: 1;
                     }
                     .tooltip-score {
-                        font-size: 16px;
+                        font-size: 14px;
                         font-weight: 600;
                         color: #3498db;
-                        margin-bottom: 8px;
-                        padding-bottom: 8px;
+                        margin-bottom: 5px;
+                        padding-bottom: 5px;
                         border-bottom: 1px solid rgba(255,255,255,0.2);
                     }
                     .tooltip-error-title {
                         font-weight: 600;
                         color: #e74c3c;
-                        margin-top: 8px;
-                        margin-bottom: 4px;
+                        margin-top: 5px;
+                        margin-bottom: 2px;
+                        font-size: 11px;
                     }
                     .tooltip-error-item {
-                        margin: 6px 0;
-                        padding-left: 12px;
-                        border-left: 3px solid #e74c3c;
+                        margin: 3px 0;
+                        padding-left: 8px;
+                        border-left: 2px solid #e74c3c;
                     }
                     .tooltip-error-type {
                         color: #f39c12;
                         font-weight: 600;
+                        font-size: 11px;
                     }
                     .tooltip-error-detail {
                         color: #ecf0f1;
-                        font-size: 13px;
-                        margin-top: 2px;
+                        font-size: 11px;
+                        margin-top: 1px;
                     }
                     .tooltip-no-error {
                         color: #2ecc71;
                         font-weight: 600;
+                        font-size: 12px;
                     }
                     </style>
                     """
@@ -486,23 +555,24 @@ def main():
                     }
                     .word-tooltip .tooltiptext {
                         visibility: hidden;
-                        width: 320px;
+                        width: 180px;
                         background-color: #2c3e50;
                         color: #fff;
                         text-align: left;
-                        border-radius: 8px;
-                        padding: 12px 16px;
+                        border-radius: 6px;
+                        padding: 8px 12px;
                         position: absolute;
                         z-index: 1000;
                         bottom: 125%;
                         left: 50%;
-                        margin-left: -160px;
+                        margin-left: -90px;
                         opacity: 0;
                         transition: opacity 0.3s, visibility 0.3s;
                         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                        font-size: 14px;
-                        line-height: 1.6;
+                        font-size: 12px;
+                        line-height: 1.4;
                         font-weight: normal;
+                        white-space: normal;
                     }
                     .word-tooltip .tooltiptext::after {
                         content: "";
@@ -519,36 +589,39 @@ def main():
                         opacity: 1;
                     }
                     .tooltip-score {
-                        font-size: 16px;
+                        font-size: 14px;
                         font-weight: 600;
                         color: #3498db;
-                        margin-bottom: 8px;
-                        padding-bottom: 8px;
+                        margin-bottom: 5px;
+                        padding-bottom: 5px;
                         border-bottom: 1px solid rgba(255,255,255,0.2);
                     }
                     .tooltip-error-title {
                         font-weight: 600;
                         color: #e74c3c;
-                        margin-top: 8px;
-                        margin-bottom: 4px;
+                        margin-top: 5px;
+                        margin-bottom: 2px;
+                        font-size: 11px;
                     }
                     .tooltip-error-item {
-                        margin: 6px 0;
-                        padding-left: 12px;
-                        border-left: 3px solid #e74c3c;
+                        margin: 3px 0;
+                        padding-left: 8px;
+                        border-left: 2px solid #e74c3c;
                     }
                     .tooltip-error-type {
                         color: #f39c12;
                         font-weight: 600;
+                        font-size: 11px;
                     }
                     .tooltip-error-detail {
                         color: #ecf0f1;
-                        font-size: 13px;
-                        margin-top: 2px;
+                        font-size: 11px;
+                        margin-top: 1px;
                     }
                     .tooltip-no-error {
                         color: #2ecc71;
                         font-weight: 600;
+                        font-size: 12px;
                     }
                     </style>
                     """
