@@ -8,7 +8,6 @@ import time
 from config.constants import APP_TITLE, APP_DESCRIPTION, DEFAULT_SCRIPTS
 from config.offline_settings import offline_settings
 from src.offline_analyzer import OfflinePronunciationAnalyzer, OfflineAnalyzerError
-from src.advanced_pronunciation_analyzer import EnhancedOfflineAnalyzer
 from src.audio_handler import SimpleAudioRecorder, play_audio
 from src.results_processor import ResultsProcessor
 from src.ui_components import (
@@ -53,9 +52,6 @@ if "reference_text" not in st.session_state:
     st.session_state.reference_text = ""
 if "offline_analyzer" not in st.session_state:
     st.session_state.offline_analyzer = None
-if "use_enhanced" not in st.session_state:
-    st.session_state.use_enhanced = True
-    st.session_state.analysis_results = None
 if "reference_text" not in st.session_state:
     st.session_state.reference_text = ""
 
@@ -68,48 +64,22 @@ def main():
     # Add model settings in sidebar
     with st.sidebar:
         st.markdown("### ⚙️ Cài Đặt Mô Hình AI")
-        st.info("🤖 Sử dụng mô hình AI offline")
+        st.info("🤖 Sử dụng Enhanced Analyzer (Offline)")
         
-        # Analysis mode selection
-        use_enhanced = st.toggle(
-            "🎓 Chế độ Nâng Cao (CMUdict + Praat)",
-            value=st.session_state.use_enhanced,
-            help="Bật để sử dụng phân tích nâng cao với CMUdict, GOP scoring, và Praat prosody analysis. Chính xác hơn nhưng chậm hơn."
-        )
-        
-        if use_enhanced != st.session_state.use_enhanced:
-            st.session_state.use_enhanced = use_enhanced
-            st.session_state.offline_analyzer = None  # Reset analyzer
-            st.rerun()
-        
-        if use_enhanced:
-            st.success("✅ Sử dụng Enhanced Analyzer")
-            st.caption("• CMUdict cho phoneme chuẩn")
-            st.caption("• GOP scoring")
-            st.caption("• Praat cho prosody chi tiết")
-            st.caption("• Phát hiện lỗi stress")
-        else:
-            st.info("📊 Sử dụng Basic Analyzer")
-            st.caption("• Whisper + IPA")
-            st.caption("• Librosa features")
-            st.caption("• Nhanh hơn")
+        st.success("✅ Phân Tích Nâng Cao")
+        st.caption("• Whisper ASR fine-tuned")
+        st.caption("• CMUdict G2P với stress markers")
+        st.caption("• Praat prosody analysis")
+        st.caption("• GOP scoring")
+        st.caption("• Stress error detection")
         
         st.markdown("---")
-        
-        whisper_model = st.selectbox(
-            "Whisper Model",
-            options=["tiny", "base", "small", "medium"],
-            index=1,
-            help="Base: Cân bằng tốc độ và độ chính xác. Small: Chính xác hơn nhưng chậm hơn."
-        )
-        offline_settings.whisper_model = whisper_model
-        
-        st.markdown("---")
-        st.markdown("**Thông tin:**")
-        st.caption("• Tiny: Nhanh nhất, độ chính xác thấp")
-        st.caption("• Base: Cân bằng (khuyến nghị)")
-        st.caption("• Small: Chính xác hơn, chậm hơn")
-        st.caption("• Medium: Chính xác nhất, rất chậm")
+        st.markdown("**Mô hình Whisper:**")
+        st.info("🎯 HarshDev-whisper-small-English (Medical dataset)")
+        st.caption("• WER: 6.68% (rất chính xác)")
+        st.caption("• Fine-tuned trên 4000 steps")
+        st.caption("• Base: openai/whisper-small.en")
+        st.caption("• Optimized cho English ASR")
     
     # Main layout - 2 columns (30/70)
     col_input, col_result = st.columns([3, 7])
@@ -184,28 +154,17 @@ def main():
                 try:
                     # Initialize analyzer if needed (silently on first run)
                     if st.session_state.offline_analyzer is None:
-                        if st.session_state.use_enhanced:
-                            st.session_state.offline_analyzer = EnhancedOfflineAnalyzer(
-                                whisper_model=offline_settings.whisper_model,
-                                device=offline_settings.device
-                            )
-                        else:
-                            st.session_state.offline_analyzer = OfflinePronunciationAnalyzer(
-                                whisper_model=offline_settings.whisper_model,
-                                device=offline_settings.device
-                            )
+                        st.session_state.offline_analyzer = OfflinePronunciationAnalyzer(
+                            whisper_model="Dev372/HarshDev-whisper-small-English_4000",
+                            device=offline_settings.device
+                        )
                     
-                    # Analyze pronunciation
-                    if st.session_state.use_enhanced and hasattr(st.session_state.offline_analyzer, 'analyze_pronunciation_enhanced'):
-                        response = st.session_state.offline_analyzer.analyze_pronunciation_enhanced(
-                            audio_data=st.session_state.audio_data,
-                            reference_text=st.session_state.reference_text
-                        )
-                    else:
-                        response = st.session_state.offline_analyzer.analyze_pronunciation(
-                            audio_data=st.session_state.audio_data,
-                            reference_text=st.session_state.reference_text
-                        )
+                    # Analyze pronunciation with advanced features enabled
+                    response = st.session_state.offline_analyzer.analyze_pronunciation(
+                        audio_data=st.session_state.audio_data,
+                        reference_text=st.session_state.reference_text,
+                        use_advanced=True  # Always use advanced features
+                    )
                     
                     # Process results
                     processor = ResultsProcessor()
